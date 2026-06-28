@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="Imagem do produto (placeholder)">
+  <rect width="160" height="160" fill="#f3f4f6"/>
+  <g fill="none" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 58h56l-6 52a8 8 0 0 1-8 7H66a8 8 0 0 1-8-7z"/>
+    <path d="M66 58a14 14 0 0 1 28 0"/>
+  </g>
+</svg>

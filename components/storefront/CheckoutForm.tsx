@@ -1,0 +1,241 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { ArrowLeft, Copy, Check, MessageCircle, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label, FieldError } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { formatBRL } from '@/lib/format'
+import { buildWhatsAppMessage, buildWhatsAppUrl } from '@/lib/order/buildWhatsAppMessage'
+import { cn } from '@/lib/utils'
+import type { CartItem, SerializedSettings, SerializedStore } from '@/lib/types'
+
+type FulfillmentType = 'DELIVERY' | 'PICKUP'
+const PAYMENTS = ['Dinheiro', 'Cartão na entrega', 'PIX'] as const
+
+export function CheckoutForm({
+  store,
+  settings,
+  items,
+  subtotal,
+  onBack,
+  onSent,
+}: {
+  store: SerializedStore
+  settings: SerializedSettings
+  items: CartItem[]
+  subtotal: number
+  onBack: () => void
+  onSent: () => void
+}) {
+  const allowDelivery = settings.fulfillment !== 'PICKUP_ONLY'
+  const allowPickup = settings.fulfillment !== 'DELIVERY_ONLY'
+  const hasZones = settings.deliveryZones.length > 0
+
+  const [name, setName] = useState('')
+  const [type, setType] = useState<FulfillmentType>(allowDelivery ? 'DELIVERY' : 'PICKUP')
+  const [zone, setZone] = useState('')
+  const [address, setAddress] = useState('')
+  const [payment, setPayment] = useState<(typeof PAYMENTS)[number]>('Dinheiro')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [pixCopied, setPixCopied] = useState(false)
+
+  const isDelivery = type === 'DELIVERY'
+  const deliveryFee = isDelivery ? settings.deliveryFee : 0
+  const total = subtotal + deliveryFee
+  const belowMin = subtotal < settings.minOrderValue
+
+  const fullAddress = useMemo(() => {
+    if (!isDelivery) return ''
+    if (hasZones) return [zone, address].filter(Boolean).join(' - ')
+    return address.trim()
+  }, [isDelivery, hasZones, zone, address])
+
+  function copyPix() {
+    if (!settings.pixKey) return
+    navigator.clipboard?.writeText(settings.pixKey).then(() => {
+      setPixCopied(true)
+      setTimeout(() => setPixCopied(false), 1800)
+    })
+  }
+
+  function validate(): boolean {
+    const e: Record<string, string> = {}
+    if (!name.trim()) e.name = 'Informe seu nome.'
+    if (isDelivery) {
+      if (hasZones && !zone) e.zone = 'Selecione o bairro.'
+      if (!fullAddress) e.address = 'Informe o endereço de entrega.'
+    }
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  function handleSubmit() {
+    if (belowMin) return
+    if (!validate()) return
+
+    const message = buildWhatsAppMessage({
+      storeName: store.name,
+      items: items.map((i) => ({ name: i.name, quantity: i.quantity, unitPrice: i.price })),
+      subtotal,
+      deliveryFee,
+      total,
+      fulfillmentType: type,
+      customerName: name.trim(),
+      address: fullAddress || undefined,
+      paymentMethod: payment,
+      pixKey: payment === 'PIX' ? settings.pixKey ?? undefined : undefined,
+      template: settings.orderMessageTemplate,
+    })
+    const url = buildWhatsAppUrl(store.whatsappNumber, message)
+    window.open(url, '_blank', 'noopener')
+    onSent()
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-5 p-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1 text-sm font-medium text-neutral-500 hover:text-neutral-800"
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
+        </button>
+
+        <div>
+          <Label htmlFor="co-name">Seu nome</Label>
+          <Input
+            id="co-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Como devemos te chamar?"
+          />
+          <FieldError message={errors.name} />
+        </div>
+
+        {/* Tipo: entrega / retirada (respeita o fulfillment da loja) */}
+        {allowDelivery && allowPickup && (
+          <div>
+            <Label>Como você quer receber?</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['DELIVERY', 'PICKUP'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setType(opt)}
+                  className={cn(
+                    'h-11 rounded-xl border text-sm font-medium transition',
+                    type === opt
+                      ? 'border-accent bg-accent text-accent-fg'
+                      : 'border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50',
+                  )}
+                >
+                  {opt === 'DELIVERY' ? 'Entrega' : 'Retirada'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Endereço (só entrega) */}
+        {isDelivery && (
+          <div className="space-y-3">
+            {hasZones && (
+              <div>
+                <Label htmlFor="co-zone">Bairro</Label>
+                <Select id="co-zone" value={zone} onChange={(e) => setZone(e.target.value)}>
+                  <option value="">Selecione o bairro</option>
+                  {settings.deliveryZones.map((z) => (
+                    <option key={z} value={z}>
+                      {z}
+                    </option>
+                  ))}
+                </Select>
+                <FieldError message={errors.zone} />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="co-address">
+                {hasZones ? 'Endereço (rua, número, complemento)' : 'Endereço de entrega'}
+              </Label>
+              <Input
+                id="co-address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Rua, número, complemento"
+              />
+              <FieldError message={errors.address} />
+            </div>
+          </div>
+        )}
+
+        {/* Pagamento */}
+        <div>
+          <Label htmlFor="co-pay">Forma de pagamento</Label>
+          <Select
+            id="co-pay"
+            value={payment}
+            onChange={(e) => setPayment(e.target.value as (typeof PAYMENTS)[number])}
+          >
+            {PAYMENTS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </Select>
+
+          {payment === 'PIX' && settings.pixKey && (
+            <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-neutral-100 px-3 py-2">
+              <div className="min-w-0">
+                <p className="text-xs text-neutral-500">Chave PIX</p>
+                <p className="truncate text-sm font-medium text-neutral-800">{settings.pixKey}</p>
+              </div>
+              <button
+                type="button"
+                onClick={copyPix}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50"
+              >
+                {pixCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {pixCopied ? 'Copiado' : 'Copiar'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Resumo */}
+        <div className="space-y-1 rounded-xl border border-neutral-200 p-3 text-sm">
+          <div className="flex justify-between text-neutral-600">
+            <span>Subtotal</span>
+            <span>{formatBRL(subtotal)}</span>
+          </div>
+          {isDelivery && (
+            <div className="flex justify-between text-neutral-600">
+              <span>Taxa de entrega</span>
+              <span>{formatBRL(deliveryFee)}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-t border-neutral-200 pt-1 font-semibold text-neutral-900">
+            <span>Total</span>
+            <span>{formatBRL(total)}</span>
+          </div>
+        </div>
+
+        {belowMin && (
+          <p className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            Pedido mínimo de {formatBRL(settings.minOrderValue)}. Adicione mais itens.
+          </p>
+        )}
+      </div>
+
+      <div className="border-t border-neutral-200 p-4">
+        <Button onClick={handleSubmit} disabled={belowMin} className="w-full" size="lg">
+          <MessageCircle className="h-5 w-5" />
+          Enviar pedido pelo WhatsApp
+        </Button>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,76 @@
+import { prisma } from '@/lib/prisma'
+import type { Prisma, Fulfillment } from '@prisma/client'
+
+/**
+ * Repositório de Store.
+ *
+ * REGRA DE OURO (isolamento multi-tenant):
+ * - Vitrine: a loja é resolvida pelo SLUG da URL (somente dados públicos).
+ * - Painel: a loja vem SEMPRE do storeId da sessão autenticada, nunca de input.
+ */
+
+/** Vitrine pública — resolve a loja pelo slug. */
+export function getStoreBySlug(slug: string) {
+  return prisma.store.findUnique({
+    where: { slug },
+    include: { settings: true },
+  })
+}
+
+/** Painel — carrega a loja pelo storeId (vindo da sessão). */
+export function getStoreForPanel(storeId: string) {
+  return prisma.store.findUnique({
+    where: { id: storeId },
+    include: { settings: true },
+  })
+}
+
+export async function countProducts(storeId: string) {
+  return prisma.product.count({ where: { storeId } })
+}
+
+/** Atualiza dados de marca/identidade da loja. */
+export async function updateStoreProfile(
+  storeId: string,
+  data: {
+    name: string
+    whatsappNumber: string
+    accentColor: string | null
+    logoUrl?: string | null
+  },
+) {
+  await prisma.store.update({ where: { id: storeId }, data })
+}
+
+/** Cria/atualiza as configurações 1-1 da loja. */
+export async function upsertStoreSettings(
+  storeId: string,
+  data: {
+    address: string | null
+    deliveryFee: number
+    minOrderValue: number
+    pixKey: string | null
+    fulfillment: Fulfillment
+    deliveryZones: string[]
+    openingHours: Record<string, { open: string; close: string } | null> | null
+    showOutOfStock: boolean
+    orderMessageTemplate: string | null
+  },
+) {
+  const payload = {
+    address: data.address,
+    deliveryFee: data.deliveryFee,
+    minOrderValue: data.minOrderValue,
+    pixKey: data.pixKey,
+    fulfillment: data.fulfillment,
+    deliveryZones: (data.deliveryZones ?? []) as unknown as Prisma.InputJsonValue,
+    openingHours: (data.openingHours ?? undefined) as unknown as Prisma.InputJsonValue | undefined,
+    showOutOfStock: data.showOutOfStock,
+    orderMessageTemplate: data.orderMessageTemplate,
+  }
+  await prisma.storeSettings.upsert({
+    where: { storeId },
+    create: { storeId, ...payload },
+    update: payload,
+  })
+}

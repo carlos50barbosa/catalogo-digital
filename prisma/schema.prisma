@@ -1,0 +1,154 @@
+// Catálogo Digital — schema multi-tenant (banco único, isolamento por storeId).
+// Provider mysql (MariaDB/MySQL). Toda tabela de loja carrega storeId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Plan {
+  ESSENCIAL
+  PROFISSIONAL
+  PREMIUM
+}
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+enum Unit {
+  UN
+  KG
+  L
+  PCT
+}
+
+enum Fulfillment {
+  DELIVERY_AND_PICKUP
+  DELIVERY_ONLY
+  PICKUP_ONLY
+}
+
+// ---------- Tenant ----------
+
+/// Store é o tenant. Cada mercadinho é uma Store.
+model Store {
+  id             String   @id @default(cuid())
+  slug           String   @unique // identifica a loja na vitrine pública /{slug}
+  name           String
+  logoUrl        String?
+  whatsappNumber String // formato internacional, ex.: 5582999999999
+  accentColor    String? // hex, ex.: #16a34a
+  isActive       Boolean  @default(true)
+  plan           Plan     @default(ESSENCIAL)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users      User[]
+  settings   StoreSettings?
+  categories Category[]
+  products   Product[]
+
+  @@index([slug])
+}
+
+/// Dono/operador de uma loja. Pertence a exatamente uma Store.
+model User {
+  id           String   @id @default(cuid())
+  storeId      String
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(OWNER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([email])
+}
+
+/// Configurações 1-1 da loja.
+model StoreSettings {
+  id                   String      @id @default(cuid())
+  storeId              String      @unique
+  address              String?
+  deliveryFee          Decimal     @default(0) @db.Decimal(10, 2)
+  minOrderValue        Decimal     @default(0) @db.Decimal(10, 2)
+  pixKey               String?
+  openingHours         Json? // { seg: {open,close}, ter: {...}, ... }
+  deliveryZones        Json? // ["Centro", "Farol", ...]
+  fulfillment          Fulfillment @default(DELIVERY_AND_PICKUP)
+  orderMessageTemplate String?     @db.Text
+  showOutOfStock       Boolean     @default(true) // mostrar produtos esgotados (true) ou ocultar (false)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Catálogo da loja ----------
+
+model Category {
+  id        String   @id @default(cuid())
+  storeId   String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([storeId])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  storeId       String
+  categoryId    String?
+  catalogItemId String? // referência opcional à biblioteca compartilhada
+  name          String
+  description   String?  @db.Text
+  price         Decimal  @db.Decimal(10, 2)
+  unit          Unit     @default(UN)
+  imageUrl      String?
+  isAvailable   Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category    Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  catalogItem CatalogItem? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+
+  @@index([storeId, isAvailable])
+  @@index([storeId, categoryId])
+}
+
+// ---------- Biblioteca compartilhada (GLOBAL, sem storeId) ----------
+
+/// Catálogo mestre reaproveitável entre lojas (refrigerante, água, gás, arroz...).
+/// Cadastra-se nome/foto uma vez; cada loja só define o próprio preço.
+model CatalogItem {
+  id                String   @id @default(cuid())
+  name              String
+  defaultImageUrl   String?
+  barcode           String?  @unique
+  brand             String?
+  suggestedCategory String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  products Product[]
+
+  @@index([name])
+}
