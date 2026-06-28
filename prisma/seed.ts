@@ -9,6 +9,8 @@ const PLACEHOLDER_IMAGE = '/placeholders/product.svg'
 const DEMO_SLUG = 'mercadinho-demo'
 const DEMO_EMAIL = 'dono@mercadinho-demo.com.br'
 const DEMO_PASSWORD = 'demo1234'
+const SUPER_EMAIL = 'admin@plataforma.com'
+const SUPER_PASSWORD = 'admin1234'
 
 type Unit = 'UN' | 'KG' | 'L' | 'PCT'
 
@@ -145,6 +147,35 @@ async function main() {
       passwordHash,
       name: 'Dono do Mercadinho',
       role: 'OWNER',
+    },
+  })
+
+  // 4b) Usuário SUPERADMIN (painel da plataforma /admin-plataforma).
+  const superHash = await bcrypt.hash(SUPER_PASSWORD, 10)
+  await prisma.user.upsert({
+    where: { email: SUPER_EMAIL },
+    update: {},
+    create: {
+      storeId: store.id, // vinculado à loja demo; o papel SUPERADMIN dá acesso à plataforma
+      email: SUPER_EMAIL,
+      passwordHash: superHash,
+      name: 'Admin da Plataforma',
+      role: 'SUPERADMIN',
+    },
+  })
+
+  // 4c) Assinatura demo (ACTIVE) para popular o painel da plataforma.
+  await prisma.subscription.upsert({
+    where: { storeId: store.id },
+    update: {},
+    create: {
+      storeId: store.id,
+      plan: 'PROFISSIONAL',
+      value: 119,
+      billingType: 'PIX',
+      status: 'ACTIVE',
+      cycle: 'MONTHLY',
+      nextDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   })
 
@@ -306,6 +337,10 @@ async function main() {
   console.log('  Painel:               /painel/login')
   console.log('  E-mail:               ' + DEMO_EMAIL)
   console.log('  Senha:                ' + DEMO_PASSWORD)
+  console.log('────────────────────────────────────────')
+  console.log('  Plataforma (SUPERADMIN): /admin-plataforma')
+  console.log('  E-mail:               ' + SUPER_EMAIL)
+  console.log('  Senha:                ' + SUPER_PASSWORD)
   console.log('────────────────────────────────────────')
 }
 

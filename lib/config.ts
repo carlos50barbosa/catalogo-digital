@@ -22,4 +22,22 @@ export const config = {
 
   /** Cor de destaque padrão quando a loja não define accentColor. */
   defaultAccentColor: '#16a34a',
+
+  /** WhatsApp de vendas (para CTAs de upgrade/regularização no painel). */
+  salesWhatsapp: process.env.SALES_WHATSAPP ?? '5582999999999',
+
+  /** Taxa única de montagem (referência exibível). */
+  setupFee: Number(process.env.SETUP_FEE ?? '250') || 250,
+
+  /** Asaas (Parte B). Chaves só via env. */
+  asaas: {
+    apiKey: process.env.ASAAS_API_KEY ?? '',
+    webhookToken: process.env.ASAAS_WEBHOOK_TOKEN ?? '',
+    env: (process.env.ASAAS_ENV ?? 'sandbox') as 'sandbox' | 'production',
+    baseUrl:
+      process.env.ASAAS_BASE_URL ??
+      (process.env.ASAAS_ENV === 'production'
+        ? 'https://api.asaas.com/v3'
+        : 'https://api-sandbox.asaas.com/v3'),
+  },
 } as const

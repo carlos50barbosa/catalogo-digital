@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { requireStore } from '@/lib/auth-helpers'
 import { getStoreForPanel } from '@/lib/data/stores'
 import { AdminShell } from '@/components/admin/AdminShell'
+import { PanelStatusGate } from '@/components/admin/PanelStatusGate'
+import { panelAccess } from '@/lib/store-status'
 import { safeHexColor } from '@/lib/utils'
 import { config } from '@/lib/config'
 
@@ -20,10 +22,12 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const name = store?.name ?? 'Minha loja'
   const slug = store?.slug ?? session.storeSlug
   const accent = safeHexColor(store?.accentColor, config.defaultAccentColor)
+  const access = panelAccess(store?.status ?? 'ACTIVE')
 
   return (
     <div style={{ '--accent': accent } as React.CSSProperties}>
       <AdminShell storeName={name} storeSlug={slug}>
+        <PanelStatusGate access={access} />
         {children}
       </AdminShell>
     </div>

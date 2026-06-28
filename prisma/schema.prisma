@@ -21,6 +21,22 @@ enum Plan {
 enum Role {
   OWNER
   STAFF
+  SUPERADMIN // admin da plataforma — enxerga todas as lojas
+}
+
+enum StoreStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
+}
+
+enum BillingType {
+  PIX
+  BOLETO
+  CREDIT_CARD
+  UNDEFINED
 }
 
 enum Unit {
@@ -55,17 +71,20 @@ model Store {
   logoUrl        String?
   whatsappNumber String // formato internacional, ex.: 5582999999999
   accentColor    String? // hex, ex.: #16a34a
-  isActive       Boolean  @default(true)
-  plan           Plan     @default(ESSENCIAL)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  isActive       Boolean     @default(true) // legado: derivado de status (live = não SUSPENDED/CANCELED)
+  status         StoreStatus @default(ACTIVE)
+  plan           Plan        @default(ESSENCIAL)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  users      User[]
-  settings   StoreSettings?
-  categories Category[]
-  products   Product[]
-  orders     Order[]
-  customers  Customer[]
+  users         User[]
+  settings      StoreSettings?
+  categories    Category[]
+  products      Product[]
+  orders        Order[]
+  customers     Customer[]
+  subscription  Subscription?
+  billingEvents BillingEvent[]
 
   @@index([slug])
 }
@@ -227,4 +246,39 @@ model Customer {
   @@unique([storeId, phone]) // reconhece cliente recorrente por loja
   @@index([storeId])
   @@index([phone])
+}
+
+// ---------- Assinatura / cobrança (Parte B) ----------
+
+/// Assinatura da loja no gateway (Asaas). Espelha o estado da cobrança recorrente.
+model Subscription {
+  id                    String      @id @default(cuid())
+  storeId               String      @unique
+  gateway               String      @default("asaas")
+  gatewayCustomerId     String?
+  gatewaySubscriptionId String?
+  plan                  Plan
+  status                String      @default("PENDING") // espelha o status no gateway
+  billingType           BillingType @default(UNDEFINED)
+  value                 Decimal     @db.Decimal(10, 2)
+  cycle                 String      @default("MONTHLY")
+  nextDueDate           DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+/// Log de auditoria/idempotência dos webhooks do gateway.
+model BillingEvent {
+  id             String   @id @default(cuid())
+  storeId        String?
+  gatewayEventId String   @unique // idempotência: não processa o mesmo evento 2x
+  type           String
+  payload        Json
+  receivedAt     DateTime @default(now())
+
+  store Store? @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  @@index([storeId])
 }

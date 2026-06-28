@@ -10,6 +10,8 @@ import {
   setProductAvailability,
   setProductPrice,
 } from '@/lib/data/products'
+import { getStoreForPanel, countProducts } from '@/lib/data/stores'
+import { canAddProduct, productLimit } from '@/lib/plans'
 import { getCatalogItem } from '@/lib/data/catalog'
 import { productSchema, fieldErrors } from '@/lib/validation'
 import { saveImage, hasUpload } from '@/lib/upload'
@@ -33,6 +35,18 @@ export async function createProductAction(
   formData: FormData,
 ): Promise<ActionState> {
   const { storeId } = await requireStore()
+
+  // Feature gating: limite de produtos do plano (validado no servidor).
+  const store = await getStoreForPanel(storeId)
+  if (store) {
+    const count = await countProducts(storeId)
+    if (!canAddProduct(store.plan, count)) {
+      return {
+        error: `Seu plano permite até ${productLimit(store.plan)} produtos. Fale com a gente para liberar mais.`,
+      }
+    }
+  }
+
   const parsed = productSchema.safeParse(parseProductForm(formData))
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) }
 

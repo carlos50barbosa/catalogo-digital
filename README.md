@@ -111,6 +111,12 @@ Senha:  demo1234
 | `APP_URL`         | ✅          | URL pública usada em links/metadata (ex.: `https://...`)         |
 | `UPLOAD_DIR`      | ✅          | Pasta dos uploads, ex.: `/var/www/catalogo/uploads`             |
 | `MAX_UPLOAD_MB`   | —           | Tamanho máximo de upload em MB (default 5)                       |
+| `SALES_WHATSAPP`  | —           | WhatsApp de vendas (CTAs de upgrade/regularização no painel)    |
+| `SETUP_FEE`       | —           | Taxa única de montagem, em R$ (referência; default 250)         |
+| `ASAAS_ENV`       | — (Parte B) | `sandbox` ou `production`                                        |
+| `ASAAS_API_KEY`   | — (Parte B) | Chave da API do Asaas (vazio = billing semi-manual, sem gateway)|
+| `ASAAS_WEBHOOK_TOKEN` | — (B)   | Token do webhook (validado no header `asaas-access-token`)       |
+| `ASAAS_BASE_URL`  | —           | Opcional; derivado de `ASAAS_ENV` se omitido                     |
 
 Veja `.env.example`.
 
@@ -330,10 +336,35 @@ O `postbuild` cuida da cópia de `static`/`public`.
 - **Foto via câmera** do celular no painel, com **compressão no cliente** antes do upload.
 - **Confirmação pós-checkout** com instrução de apertar enviar e botão de reabrir o WhatsApp.
 
+## Planos, limites e assinatura (Asaas)
+
+- **Planos** (`lib/plans.ts`, fonte única): limites e recursos por plano (limite de produtos,
+  ofertas, branding, suporte, conteúdo gerenciado). Checks centralizados em `can()` / `productLimit()`.
+- **Limite de produtos** aplicado **no servidor** (criação e importação CSV), com mensagem de upgrade.
+- **Status da loja** (`Store.status`: `TRIALING|ACTIVE|PAST_DUE|SUSPENDED|CANCELED`) com efeitos
+  centralizados (`lib/store-status.ts`): vitrine tolera `PAST_DUE`, mostra "indisponível" em
+  `SUSPENDED`, some em `CANCELED`; painel mostra aviso/restringe à tela de assinatura.
+- **Painel da loja → "Meu plano"** (`/painel/assinatura`): uso vs limite, status, próxima cobrança,
+  regularização e "mudar plano" (via WhatsApp de vendas — modelo assistido).
+- **Painel da plataforma** (`/admin-plataforma`, papel **SUPERADMIN**): lista todas as lojas,
+  filtros por status, MRR estimado, e ações de criar/mudar/cancelar assinatura + **override manual
+  de status**. OWNER/STAFF nunca acessam.
+- **Cobrança (Asaas)**: o gateway é abstraído em `lib/billing/` (`BillingGateway` + `AsaasGateway`).
+  Sem `ASAAS_API_KEY`, o billing roda **semi-manual** (assinatura local + override de status). Com a
+  chave, a ação de criar assinatura cria cliente + assinatura recorrente + a taxa de montagem
+  (cobrança avulsa) no Asaas (sandbox/produção via `ASAAS_ENV`).
+- **Webhook**: configure no painel do Asaas a URL `https://SEU_DOMINIO/api/webhooks/asaas` e um token;
+  coloque o mesmo token em `ASAAS_WEBHOOK_TOKEN`. O endpoint valida o header `asaas-access-token`, é
+  idempotente (tabela `BillingEvent`) e mapeia os eventos `PAYMENT_*` para o status da loja.
+  O produto **não** guarda dados de cartão.
+
+> Acesso de teste após o seed — Plataforma: `admin@plataforma.com` / `admin1234` (`/admin-plataforma`).
+
 ## Fora do escopo do MVP (FASE 2)
 
-Fluxo de **status/confirmação** de pedido (no MVP o pedido é só "gerado") · cadastro self-service +
-cobrança (Stripe) · estoque numérico e variações · dashboard de métricas avançado · domínio/subdomínio
-próprio por loja · storage S3 (a interface já está pronta) · fidelidade/promoções para a base de
-clientes · API oficial do WhatsApp (no MVP é `wa.me`).
+Fluxo de **status/confirmação** de pedido (no MVP o pedido é só "gerado") · **cadastro self-service**
+de loja com checkout online + **upgrade self-service** com pagamento na hora (no MVP o onboard e a
+assinatura são assistidos; a cobrança recorrente já roda via Asaas) · estoque numérico e variações ·
+dashboard de métricas avançado · domínio/subdomínio próprio por loja · storage S3 (a interface já
+está pronta) · fidelidade/promoções para a base de clientes · API oficial do WhatsApp (no MVP é `wa.me`).
 ```

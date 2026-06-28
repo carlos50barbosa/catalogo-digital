@@ -7,6 +7,7 @@ import { authConfig } from './auth.config'
 export default NextAuth(authConfig).auth
 
 export const config = {
-  // Protege o painel. O login (/painel/login) é liberado pelo callback authorized.
-  matcher: ['/painel/:path*'],
+  // Protege o painel da loja e o painel da plataforma.
+  // O login (/painel/login) é liberado pelo callback authorized.
+  matcher: ['/painel/:path*', '/admin-plataforma/:path*'],
 }

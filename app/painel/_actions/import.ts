@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { requireStore } from '@/lib/auth-helpers'
 import { bulkCreateProducts } from '@/lib/data/products'
 import { getOrCreateCategoryByName } from '@/lib/data/categories'
+import { getStoreForPanel, countProducts } from '@/lib/data/stores'
+import { productLimit } from '@/lib/plans'
 import type { Unit } from '@/lib/types'
 
 type ImportRow = { name: string; category: string; price: number; unit: Unit }
@@ -17,6 +19,23 @@ export async function importProductsAction(rows: ImportRow[]) {
   }
   if (rows.length > MAX_ROWS) {
     return { ok: false as const, imported: 0, error: `Máximo de ${MAX_ROWS} produtos por importação.` }
+  }
+
+  // Feature gating: não ultrapassar o limite de produtos do plano.
+  const store = await getStoreForPanel(storeId)
+  if (store) {
+    const limit = productLimit(store.plan)
+    if (limit !== null) {
+      const count = await countProducts(storeId)
+      if (count + rows.length > limit) {
+        const left = Math.max(0, limit - count)
+        return {
+          ok: false as const,
+          imported: 0,
+          error: `Seu plano permite até ${limit} produtos (você já tem ${count}). Importe no máximo ${left} — ou fale com a gente para liberar mais.`,
+        }
+      }
+    }
   }
 
   // Resolve categorias por nome (cria as que faltarem), escopadas na loja.

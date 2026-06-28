@@ -37,3 +37,15 @@ export async function requireStore(): Promise<SessionStore> {
     email: user.email ?? '',
   }
 }
+
+/**
+ * Garante que o usuário é SUPERADMIN (painel da plataforma).
+ * OWNER/STAFF são redirecionados — nunca acessam dados de todas as lojas.
+ */
+export async function requireSuperadmin() {
+  const session = await auth()
+  const user = session?.user
+  if (!user) redirect('/painel/login')
+  if (user.role !== 'SUPERADMIN') redirect('/painel')
+  return { userId: user.id, name: user.name ?? '', email: user.email ?? '' }
+}

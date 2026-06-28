@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireStore } from '@/lib/auth-helpers'
-import { updateStoreProfile, upsertStoreSettings } from '@/lib/data/stores'
+import { updateStoreProfile, upsertStoreSettings, getStoreForPanel } from '@/lib/data/stores'
+import { can } from '@/lib/plans'
 import { settingsSchema, fieldErrors } from '@/lib/validation'
 import { saveImage, hasUpload } from '@/lib/upload'
 import { emptyToNull, type ActionState } from '@/lib/action-state'
@@ -62,6 +63,11 @@ export async function updateSettingsAction(
 
   const accent = parsed.data.accentColor ? parsed.data.accentColor : null
 
+  // Branding: mensagem personalizada do pedido só em planos com branding "full".
+  const store = await getStoreForPanel(storeId)
+  const allowCustomMessage = store ? can(store.plan, 'customMessage') : false
+  const orderMessageTemplate = allowCustomMessage ? (parsed.data.orderMessageTemplate ?? null) : null
+
   await updateStoreProfile(storeId, {
     name: parsed.data.name,
     whatsappNumber: parsed.data.whatsappNumber,
@@ -78,7 +84,7 @@ export async function updateSettingsAction(
     deliveryZones: parsed.data.deliveryZones,
     openingHours: parsed.data.openingHours ?? null,
     showOutOfStock: parsed.data.showOutOfStock ?? true,
-    orderMessageTemplate: parsed.data.orderMessageTemplate ?? null,
+    orderMessageTemplate,
   })
 
   revalidatePath('/painel/configuracoes')

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function PrivacyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const store = await getStoreBySlug(slug)
-  if (!store || !store.isActive) notFound()
+  if (!store) notFound()
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">

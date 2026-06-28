@@ -5,7 +5,7 @@
 export type Unit = 'UN' | 'KG' | 'L' | 'PCT'
 export type Fulfillment = 'DELIVERY_AND_PICKUP' | 'DELIVERY_ONLY' | 'PICKUP_ONLY'
 export type Plan = 'ESSENCIAL' | 'PROFISSIONAL' | 'PREMIUM'
-export type Role = 'OWNER' | 'STAFF'
+export type Role = 'OWNER' | 'STAFF' | 'SUPERADMIN'
 
 /** Horário de funcionamento: chaves '0'..'6' (0 = domingo, igual a Date.getDay()). */
 export type OpeningHours = Record<string, { open: string; close: string } | null>

@@ -30,7 +30,13 @@ export type SettingsInitial = {
   orderMessageTemplate: string | null
 }
 
-export function SettingsForm({ initial }: { initial: SettingsInitial }) {
+export function SettingsForm({
+  initial,
+  canCustomMessage = true,
+}: {
+  initial: SettingsInitial
+  canCustomMessage?: boolean
+}) {
   const [state, formAction, pending] = useActionState(updateSettingsAction, initialActionState)
 
   const [logoUrl, setLogoUrl] = useState(initial.logoUrl ?? '')
@@ -271,19 +277,28 @@ export function SettingsForm({ initial }: { initial: SettingsInitial }) {
             />
             Mostrar produtos esgotados (desmarque para ocultá-los)
           </label>
-          <div>
-            <Label htmlFor="orderMessageTemplate">Mensagem do pedido (opcional)</Label>
-            <Textarea
-              id="orderMessageTemplate"
-              name="orderMessageTemplate"
-              rows={4}
-              defaultValue={initial.orderMessageTemplate ?? ''}
-              placeholder={'Deixe em branco para usar o padrão. Variáveis: {loja} {itens} {subtotal} {taxa} {total} {tipo} {cliente} {endereco} {pagamento}'}
-            />
-            <p className="mt-1 text-xs text-neutral-400">
-              Variáveis disponíveis: {'{loja} {itens} {subtotal} {taxa} {total} {tipo} {cliente} {endereco} {pagamento}'}
-            </p>
-          </div>
+          {canCustomMessage ? (
+            <div>
+              <Label htmlFor="orderMessageTemplate">Mensagem do pedido (opcional)</Label>
+              <Textarea
+                id="orderMessageTemplate"
+                name="orderMessageTemplate"
+                rows={4}
+                defaultValue={initial.orderMessageTemplate ?? ''}
+                placeholder={'Deixe em branco para usar o padrão. Variáveis: {loja} {itens} {subtotal} {taxa} {total} {tipo} {cliente} {endereco} {pagamento}'}
+              />
+              <p className="mt-1 text-xs text-neutral-400">
+                Variáveis disponíveis: {'{loja} {itens} {subtotal} {taxa} {total} {tipo} {cliente} {endereco} {pagamento}'}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-3 text-sm text-neutral-500">
+              ✨ Personalizar a mensagem do pedido está disponível nos planos Profissional e Premium.{' '}
+              <a href="/painel/assinatura" className="font-medium text-accent underline">
+                Ver meu plano
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
 

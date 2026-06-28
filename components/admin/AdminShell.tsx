@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Users,
   QrCode,
+  CreditCard,
 } from 'lucide-react'
 import { LogoutButton } from './LogoutButton'
 import { cn } from '@/lib/utils'
@@ -25,6 +26,7 @@ const NAV = [
   { href: '/painel/clientes', label: 'Clientes', icon: Users },
   { href: '/painel/importar', label: 'Importar', icon: Upload },
   { href: '/painel/divulgacao', label: 'Divulgação', icon: QrCode },
+  { href: '/painel/assinatura', label: 'Meu plano', icon: CreditCard },
   { href: '/painel/configuracoes', label: 'Config', icon: Settings },
 ]
 

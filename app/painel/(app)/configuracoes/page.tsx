@@ -1,6 +1,7 @@
 import { requireStore } from '@/lib/auth-helpers'
 import { getStoreForPanel } from '@/lib/data/stores'
 import { serializeSettings } from '@/lib/serialize'
+import { can } from '@/lib/plans'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,7 @@ export default async function SettingsPage() {
   const { storeId } = await requireStore()
   const store = await getStoreForPanel(storeId)
   const settings = serializeSettings(store?.settings ?? null)
+  const canCustomMessage = store ? can(store.plan, 'customMessage') : false
 
   return (
     <div className="space-y-5">
@@ -17,6 +19,7 @@ export default async function SettingsPage() {
         <p className="text-sm text-neutral-500">Ajuste sua loja, entrega, pagamento e horários.</p>
       </div>
       <SettingsForm
+        canCustomMessage={canCustomMessage}
         initial={{
           name: store?.name ?? '',
           logoUrl: store?.logoUrl ?? null,
