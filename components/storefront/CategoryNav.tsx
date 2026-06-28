@@ -15,9 +15,10 @@ export function CategoryNav({
   return (
     <nav
       aria-label="Categorias"
-      className="no-scrollbar sticky top-[136px] z-20 -mx-4 overflow-x-auto border-b border-neutral-200 bg-neutral-50/95 px-4 py-2 backdrop-blur"
+      className="no-scrollbar sticky top-[136px] z-20 -mx-4 overflow-x-auto border-b border-neutral-200 bg-neutral-50/95 px-4 py-2 backdrop-blur sm:overflow-x-visible"
     >
-      <ul className="flex gap-2">
+      {/* Mobile: rolagem horizontal (nowrap). Desktop: quebra em linhas (wrap) — sem rolagem escondida. */}
+      <ul className="flex flex-nowrap gap-2 sm:flex-wrap">
         {chips.map((c) => {
           const isActive = active === c.id
           return (
