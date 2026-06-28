@@ -10,17 +10,32 @@ import {
   Settings,
   ExternalLink,
   Store as StoreIcon,
+  ShoppingBag,
+  Users,
+  QrCode,
 } from 'lucide-react'
 import { LogoutButton } from './LogoutButton'
 import { cn } from '@/lib/utils'
 
 const NAV = [
   { href: '/painel', label: 'Início', icon: LayoutDashboard, exact: true },
+  { href: '/painel/pedidos', label: 'Pedidos', icon: ShoppingBag },
   { href: '/painel/produtos', label: 'Produtos', icon: Package },
   { href: '/painel/categorias', label: 'Categorias', icon: Tags },
+  { href: '/painel/clientes', label: 'Clientes', icon: Users },
   { href: '/painel/importar', label: 'Importar', icon: Upload },
+  { href: '/painel/divulgacao', label: 'Divulgação', icon: QrCode },
   { href: '/painel/configuracoes', label: 'Config', icon: Settings },
 ]
+
+// No mobile o menu inferior mostra só os principais (5 colunas).
+const PRIMARY = new Set([
+  '/painel',
+  '/painel/pedidos',
+  '/painel/produtos',
+  '/painel/clientes',
+  '/painel/configuracoes',
+])
 
 export function AdminShell({
   storeName,
@@ -100,7 +115,7 @@ export function AdminShell({
       {/* Bottom nav (mobile) */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white lg:hidden">
         <ul className="grid grid-cols-5">
-          {NAV.map((item) => {
+          {NAV.filter((item) => PRIMARY.has(item.href)).map((item) => {
             const active = isActive(item.href, item.exact)
             return (
               <li key={item.href}>

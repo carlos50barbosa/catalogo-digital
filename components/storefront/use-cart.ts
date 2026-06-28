@@ -6,6 +6,11 @@ import type { CartItem, SerializedProduct } from '@/lib/types'
 const COOKIE_PREFIX = 'cart_'
 const MAX_QTY = 99
 
+/** Arredonda para 3 casas (evita drift de float ao somar passos de 0,25 kg). */
+function round3(n: number): number {
+  return Math.round(n * 1000) / 1000
+}
+
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
   const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
@@ -72,11 +77,12 @@ export function useCart(slug: string) {
   }, [])
 
   const setQty = useCallback((productId: string, qty: number) => {
+    const next = round3(qty)
     setItems((prev) =>
-      qty <= 0
+      next <= 0
         ? prev.filter((i) => i.productId !== productId)
         : prev.map((i) =>
-            i.productId === productId ? { ...i, quantity: Math.min(MAX_QTY, qty) } : i,
+            i.productId === productId ? { ...i, quantity: Math.min(MAX_QTY, next) } : i,
           ),
     )
   }, [])

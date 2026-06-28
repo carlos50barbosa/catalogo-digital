@@ -31,3 +31,22 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Impressão do cartaz de divulgação (QR Code): mostra só a área .print-area */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

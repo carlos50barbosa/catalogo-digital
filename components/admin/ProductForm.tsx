@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, ImagePlus, AlertCircle } from 'lucide-react'
+import { ArrowLeft, ImagePlus, AlertCircle, Camera, Loader2 } from 'lucide-react'
 import { createProductAction, updateProductAction } from '@/app/painel/_actions/products'
 import { initialActionState } from '@/lib/action-state'
 import { CatalogPicker } from './CatalogPicker'
@@ -52,6 +52,45 @@ export function ProductForm({
   const [catalogItemId, setCatalogItemId] = useState(initial?.catalogItemId ?? '')
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? '')
   const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [compressing, setCompressing] = useState(false)
+  const realInputRef = useRef<HTMLInputElement>(null)
+
+  // Comprime/redimensiona no cliente antes do upload (storage é o disco da VPS).
+  async function handleFile(file: File | undefined) {
+    if (!file) return
+    setCompressing(true)
+    try {
+      const imageCompression = (await import('browser-image-compression')).default
+      const compressed = await imageCompression(file, {
+        maxWidthOrHeight: 1200,
+        maxSizeMB: 1,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.8,
+      })
+      const base = (file.name.replace(/\.[^.]+$/, '') || 'foto').slice(0, 40)
+      const finalFile = new File([compressed], `${base}.jpg`, { type: 'image/jpeg' })
+      if (realInputRef.current) {
+        const dt = new DataTransfer()
+        dt.items.add(finalFile)
+        realInputRef.current.files = dt.files
+      }
+      setFilePreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(finalFile)
+      })
+    } catch {
+      // se a compressão falhar, envia o original
+      if (realInputRef.current) {
+        const dt = new DataTransfer()
+        dt.items.add(file)
+        realInputRef.current.files = dt.files
+      }
+      setFilePreview(URL.createObjectURL(file))
+    } finally {
+      setCompressing(false)
+    }
+  }
 
   function pickFromCatalog(item: SerializedCatalogItem) {
     setName(item.name + (item.brand ? ` ${item.brand}` : ''))
@@ -94,34 +133,53 @@ export function ProductForm({
           </p>
         )}
 
-        {/* Imagem */}
+        {/* Imagem (câmera do celular ou galeria; comprimida no cliente) */}
         <div>
           <Label>Foto do produto</Label>
           <div className="flex items-center gap-4">
             <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-neutral-200">
               {filePreview ? (
-                // preview do arquivo recém-selecionado
                 <Image src={filePreview} alt="Pré-visualização" fill className="object-cover" sizes="80px" unoptimized />
               ) : (
                 <ProductImage src={imageUrl || null} alt={name || 'produto'} className="h-full w-full" iconClassName="h-6 w-6" />
               )}
             </div>
-            <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-              <ImagePlus className="h-4 w-4" />
-              Enviar foto
-              <input
-                type="file"
-                name="image"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  setFilePreview(f ? URL.createObjectURL(f) : null)
-                }}
-              />
-            </label>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                  <Camera className="h-4 w-4" />
+                  Tirar foto
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                </label>
+                <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                  <ImagePlus className="h-4 w-4" />
+                  Galeria
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                </label>
+              </div>
+              {compressing && (
+                <span className="flex items-center gap-1 text-xs text-neutral-400">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Otimizando imagem...
+                </span>
+              )}
+            </div>
           </div>
-          <p className="mt-1 text-xs text-neutral-400">JPG, PNG ou WEBP, até 5MB.</p>
+          {/* input REAL enviado no FormData (recebe o arquivo já comprimido) */}
+          <input type="file" name="image" ref={realInputRef} accept="image/*" className="hidden" tabIndex={-1} />
+          <p className="mt-1 text-xs text-neutral-400">
+            Tire uma foto na hora ou escolha da galeria — a imagem é otimizada automaticamente.
+          </p>
         </div>
 
         {/* Nome */}

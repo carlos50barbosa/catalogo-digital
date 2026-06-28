@@ -63,7 +63,18 @@ const DEMO_CUSTOM: {
     unit: 'PCT',
     category: 'Padaria',
   },
+  {
+    name: 'Queijo Mussarela (fatiado na hora)',
+    description: 'Vendido por peso. Valor confirmado na pesagem.',
+    price: 44.9,
+    unit: 'KG',
+    category: 'Frios e Laticínios',
+  },
 ]
+
+function round2(n: number): number {
+  return Math.round((n + Number.EPSILON) * 100) / 100
+}
 
 async function main() {
   console.log('🌱 Iniciando seed...')
@@ -199,6 +210,94 @@ async function main() {
     console.log(`🛒 ${sort} produtos criados na loja demo.`)
   } else {
     console.log(`🛒 Loja demo já tem ${productCount} produtos — pulando.`)
+  }
+
+  // 6) Cliente + pedidos gerados de exemplo (idempotente).
+  const orderCount = await prisma.order.count({ where: { storeId: store.id } })
+  if (orderCount === 0) {
+    const customer = await prisma.customer.upsert({
+      where: { storeId_phone: { storeId: store.id, phone: '5582988887777' } },
+      create: {
+        storeId: store.id,
+        name: 'Maria Cliente',
+        phone: '5582988887777',
+        address: 'Rua A, 100 - Centro',
+        lastOrderAt: new Date(),
+      },
+      update: {},
+    })
+
+    const prods = await prisma.product.findMany({ where: { storeId: store.id } })
+    const find = (part: string) => prods.find((p) => p.name.includes(part))
+
+    async function makeOrder(
+      picks: { part: string; qty: number }[],
+      opts: { fulfillment: 'DELIVERY' | 'PICKUP'; payment: string; address?: string },
+    ) {
+      const computed = picks
+        .map(({ part, qty }) => {
+          const p = find(part)
+          if (!p) return null
+          const unitPrice = Number(p.price)
+          return {
+            productId: p.id,
+            name: p.name,
+            unit: p.unit,
+            quantity: qty,
+            unitPrice,
+            lineTotal: round2(unitPrice * qty),
+            isEstimated: p.unit === 'KG',
+          }
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null)
+      if (computed.length === 0) return
+
+      const subtotal = round2(computed.reduce((s, i) => s + i.lineTotal, 0))
+      const deliveryFee = opts.fulfillment === 'DELIVERY' ? 5 : 0
+      const total = round2(subtotal + deliveryFee)
+
+      await prisma.order.create({
+        data: {
+          storeId: store.id,
+          customerId: customer.id,
+          customerName: customer.name,
+          customerPhone: customer.phone,
+          fulfillment: opts.fulfillment,
+          address: opts.address ?? null,
+          paymentMethod: opts.payment,
+          subtotal,
+          deliveryFee,
+          total,
+          items: { create: computed },
+        },
+      })
+    }
+
+    await makeOrder(
+      [
+        { part: 'Refrigerante Cola', qty: 2 },
+        { part: 'Banana Prata', qty: 1.5 },
+        { part: 'Arroz Branco Tipo 1 5kg', qty: 1 },
+      ],
+      { fulfillment: 'DELIVERY', payment: 'PIX', address: 'Rua A, 100 - Centro' },
+    )
+    await makeOrder(
+      [
+        { part: 'Queijo Mussarela (fatiado', qty: 0.5 },
+        { part: 'Tomate', qty: 0.75 },
+        { part: 'Leite Integral', qty: 3 },
+      ],
+      { fulfillment: 'PICKUP', payment: 'Dinheiro' },
+    )
+    await makeOrder([{ part: 'Marmita do Dia', qty: 2 }], {
+      fulfillment: 'DELIVERY',
+      payment: 'Cartão na entrega',
+      address: 'Av. Brasil, 500 - Farol',
+    })
+
+    console.log('🧾 Cliente e pedidos de exemplo criados.')
+  } else {
+    console.log(`🧾 Loja demo já tem ${orderCount} pedidos — pulando.`)
   }
 
   console.log('\n✅ Seed concluído!')

@@ -62,6 +62,30 @@ export const settingsSchema = z.object({
     .nullable(),
 })
 
+export const checkoutSchema = z.object({
+  slug: z.string().min(1),
+  customerName: z.string().min(1, 'Informe seu nome').max(120),
+  customerPhone: z
+    .string()
+    .min(8, 'Telefone inválido')
+    .max(25)
+    .refine((v) => v.replace(/\D/g, '').length >= 10, 'Telefone inválido (com DDD)'),
+  fulfillment: z.enum(['DELIVERY', 'PICKUP']),
+  address: z.string().max(255).optional().nullable(),
+  paymentMethod: z.string().min(1).max(40),
+  consent: z.boolean().refine((v) => v === true, {
+    message: 'É necessário aceitar a política de privacidade.',
+  }),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().min(1),
+        quantity: z.coerce.number().positive(),
+      }),
+    )
+    .min(1, 'Carrinho vazio'),
+})
+
 export const csvRowSchema = z.object({
   nome: z.string().min(1, 'Nome obrigatório'),
   categoria: z.string().optional(),

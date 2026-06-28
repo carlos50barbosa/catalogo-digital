@@ -36,6 +36,15 @@ enum Fulfillment {
   PICKUP_ONLY
 }
 
+enum OrderType {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  GENERATED // único status no MVP: pedido gerado (não confirmado)
+}
+
 // ---------- Tenant ----------
 
 /// Store é o tenant. Cada mercadinho é uma Store.
@@ -55,6 +64,8 @@ model Store {
   settings   StoreSettings?
   categories Category[]
   products   Product[]
+  orders     Order[]
+  customers  Customer[]
 
   @@index([slug])
 }
@@ -129,6 +140,7 @@ model Product {
   store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
   category    Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   catalogItem CatalogItem? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+  orderItems  OrderItem[]
 
   @@index([storeId, isAvailable])
   @@index([storeId, categoryId])
@@ -151,4 +163,68 @@ model CatalogItem {
   products Product[]
 
   @@index([name])
+}
+
+// ---------- Pedidos (order capture) ----------
+
+/// Pedido GERADO (não confirmado). No MVP o pedido é a mensagem do WhatsApp;
+/// aqui registramos uma cópia server-side, com valores recalculados no backend.
+model Order {
+  id            String      @id @default(cuid())
+  storeId       String
+  customerId    String?
+  customerName  String
+  customerPhone String
+  fulfillment   OrderType
+  address       String?
+  paymentMethod String
+  subtotal      Decimal     @db.Decimal(10, 2)
+  deliveryFee   Decimal     @db.Decimal(10, 2)
+  total         Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(GENERATED)
+  createdAt     DateTime    @default(now())
+
+  store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+
+  @@index([storeId, createdAt])
+  @@index([customerId])
+}
+
+/// Item do pedido com SNAPSHOT de nome/unidade/preço (histórico imune a alterações).
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String? // pode ficar null se o produto for excluído depois
+  name        String // snapshot
+  unit        Unit // snapshot
+  quantity    Decimal @db.Decimal(10, 3) // decimal: suporta peso (KG)
+  unitPrice   Decimal @db.Decimal(10, 2) // snapshot
+  lineTotal   Decimal @db.Decimal(10, 2)
+  isEstimated Boolean @default(false) // true para itens por KG (valor aproximado)
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// ---------- Base de clientes da loja ----------
+
+model Customer {
+  id          String    @id @default(cuid())
+  storeId     String
+  name        String
+  phone       String
+  address     String?
+  createdAt   DateTime  @default(now())
+  lastOrderAt DateTime?
+
+  store  Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@unique([storeId, phone]) // reconhece cliente recorrente por loja
+  @@index([storeId])
+  @@index([phone])
 }

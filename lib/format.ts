@@ -32,3 +32,24 @@ export const UNIT_LABELS: Record<Unit, string> = {
 export function unitSuffix(unit: Unit): string {
   return unit === 'KG' || unit === 'L' ? `/${UNIT_LABELS[unit]}` : ''
 }
+
+/** True se o produto é vendido por peso/volume contínuo (quantidade decimal). */
+export function isWeighed(unit: Unit): boolean {
+  return unit === 'KG'
+}
+
+/** Formata quantidade (decimal pt-BR, sem zeros sobrando). */
+export function formatQty(n: number): string {
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(n)
+}
+
+/** Quantidade com unidade: "0,5 kg" para peso, "2" para unidades. */
+export function formatQtyWithUnit(qty: number, unit: Unit): string {
+  return isWeighed(unit) ? `${formatQty(qty)} ${UNIT_LABELS[unit]}` : `${formatQty(qty)}`
+}
+
+/** Data/hora no formato pt-BR. */
+export function formatDateTimeBR(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(d)
+}

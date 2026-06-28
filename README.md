@@ -145,7 +145,7 @@ npm run create-store -- \
 
 Cria `Store` + `StoreSettings` + `User (OWNER)` com a senha já hasheada.
 
----
+--- 
 
 ## Importação de produtos por CSV
 
@@ -316,9 +316,24 @@ O `postbuild` cuida da cópia de `static`/`public`.
 
 ---
 
+## Já incluído além do MVP base
+
+- **Registro de pedidos** (order capture): o checkout grava `Order` + `OrderItem` no servidor,
+  com **recálculo de valores no backend** (preços do cliente nunca são confiados) e snapshot de
+  nome/unidade/preço. Status único `GENERATED` (pedido gerado, não confirmado).
+- **Painel:** telas de **Pedidos** (lista/detalhe) e **Clientes**, e cards de estatística no
+  dashboard (pedidos gerados / valor / ticket médio nos últimos 30 dias).
+- **Base de clientes:** captura de nome + telefone no checkout, com upsert por `(storeId, phone)`.
+- **LGPD:** consentimento no checkout + página `/{slug}/privacidade` (modelo a revisar).
+- **Produtos por peso (KG):** quantidade decimal e valores marcados como "(aprox.)".
+- **Divulgação:** gerador de **QR Code** da loja (cartaz para imprimir / baixar PNG).
+- **Foto via câmera** do celular no painel, com **compressão no cliente** antes do upload.
+- **Confirmação pós-checkout** com instrução de apertar enviar e botão de reabrir o WhatsApp.
+
 ## Fora do escopo do MVP (FASE 2)
 
-Persistência/histórico de pedidos · cadastro self-service + cobrança (Stripe) · estoque numérico
-e variações · dashboard de métricas · domínio/subdomínio próprio por loja · storage S3 (a interface
-já está pronta) · API oficial do WhatsApp (no MVP é `wa.me`).
+Fluxo de **status/confirmação** de pedido (no MVP o pedido é só "gerado") · cadastro self-service +
+cobrança (Stripe) · estoque numérico e variações · dashboard de métricas avançado · domínio/subdomínio
+próprio por loja · storage S3 (a interface já está pronta) · fidelidade/promoções para a base de
+clientes · API oficial do WhatsApp (no MVP é `wa.me`).
 ```

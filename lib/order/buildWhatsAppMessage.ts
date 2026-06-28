@@ -2,13 +2,17 @@
 // Função pura e isomórfica (usada no checkout, lado cliente). No MVP o pedido
 // NÃO é persistido: o pedido É esta mensagem.
 
-import { formatBRL } from '@/lib/format'
+import { formatBRL, formatQty, isWeighed } from '@/lib/format'
+import type { Unit } from '@/lib/types'
 
 export type OrderItem = {
   name: string
   quantity: number
   /** preço unitário */
   unitPrice: number
+  unit?: Unit
+  /** item por peso → valor aproximado */
+  isEstimated?: boolean
 }
 
 export type FulfillmentType = 'DELIVERY' | 'PICKUP'
@@ -31,7 +35,10 @@ export type OrderInput = {
 }
 
 function itemLine(it: OrderItem): string {
-  return `• ${it.quantity}x ${it.name} — ${formatBRL(it.unitPrice * it.quantity)}`
+  const weighed = it.unit ? isWeighed(it.unit) : false
+  const qty = weighed ? `${formatQty(it.quantity)}kg` : `${it.quantity}x`
+  const approx = it.isEstimated ? ' (aprox.)' : ''
+  return `• ${qty} ${it.name} — ${formatBRL(it.unitPrice * it.quantity)}${approx}`
 }
 
 /** Mensagem padrão (usada quando a loja não define orderMessageTemplate). */
