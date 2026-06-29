@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { config } from '@/lib/config'
+import { resolveUploadDir } from '@/lib/upload-path'
 import type { FileStorage, SavedFile, UploadFile } from './types'
 
 const EXT_BY_MIME: Record<string, string> = {
@@ -20,7 +21,7 @@ export class LocalDiskStorage implements FileStorage {
     const name = `${crypto.randomUUID()}.${ext}`
     const key = path.posix.join(prefix, name)
 
-    const dest = path.join(config.uploadDir, prefix, name)
+    const dest = path.join(resolveUploadDir(), prefix, name)
     await fs.mkdir(path.dirname(dest), { recursive: true })
     await fs.writeFile(dest, file.buffer)
 
@@ -33,7 +34,7 @@ export class LocalDiskStorage implements FileStorage {
   async delete(key: string): Promise<void> {
     // impede que key suba de diretório
     const safeKey = key.replace(/\.\.(\/|\\)/g, '')
-    const target = path.join(config.uploadDir, safeKey)
+    const target = path.join(resolveUploadDir(), safeKey)
     try {
       await fs.unlink(target)
     } catch {

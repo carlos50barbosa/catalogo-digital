@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { config } from '@/lib/config'
+import { resolveUploadDir } from '@/lib/upload-path'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +30,7 @@ export async function GET(
     return new Response('Not found', { status: 404 })
   }
 
-  const filePath = path.join(config.uploadDir, rel)
+  const filePath = path.join(resolveUploadDir(), rel)
   try {
     const data = await fs.readFile(filePath)
     const ext = path.extname(filePath).toLowerCase()
