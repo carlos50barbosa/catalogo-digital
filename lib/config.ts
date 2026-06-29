@@ -29,6 +29,25 @@ export const config = {
   /** Taxa única de montagem (referência exibível). */
   setupFee: Number(process.env.SETUP_FEE ?? '250') || 250,
 
+  /** Fluxo self-service. */
+  signup: {
+    /** PAY_TO_ACTIVATE: loja só publica após 1º pagamento. TRIAL: período de teste. */
+    mode: (process.env.SIGNUP_MODE ?? 'PAY_TO_ACTIVATE') as 'PAY_TO_ACTIVATE' | 'TRIAL',
+    trialDays: Number(process.env.TRIAL_DAYS ?? '7') || 7,
+    /** mínimo de produtos para publicar a loja no onboarding. */
+    minProductsToPublish: Number(process.env.MIN_PRODUCTS_TO_PUBLISH ?? '5') || 5,
+  },
+
+  /** E-mail transacional (verificação, boas-vindas). Sem host => loga no console (dev). */
+  email: {
+    host: process.env.EMAIL_HOST ?? '',
+    port: Number(process.env.EMAIL_PORT ?? '587') || 587,
+    user: process.env.EMAIL_USER ?? '',
+    pass: process.env.EMAIL_PASS ?? '',
+    secure: process.env.EMAIL_SECURE === 'true',
+    from: process.env.EMAIL_FROM ?? 'Catálogo Digital <nao-responda@cataloggo.app.br>',
+  },
+
   /** Asaas (Parte B). Chaves só via env. */
   asaas: {
     apiKey: process.env.ASAAS_API_KEY ?? '',

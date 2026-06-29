@@ -19,7 +19,7 @@ export type PlatformRow = {
   name: string
   slug: string
   plan: 'ESSENCIAL' | 'PROFISSIONAL' | 'PREMIUM'
-  status: 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELED'
+  status: 'PENDING' | 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELED'
   productCount: number
   ownerEmail: string | null
   createdAt: string
@@ -28,7 +28,7 @@ export type PlatformRow = {
   hasSubscription: boolean
 }
 
-const STATUSES = ['TRIALING', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CANCELED'] as const
+const STATUSES = ['PENDING', 'TRIALING', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CANCELED'] as const
 
 const FILTERS = [
   { id: 'all', label: 'Todas' },

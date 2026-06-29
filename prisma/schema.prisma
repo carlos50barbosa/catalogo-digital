@@ -25,6 +25,7 @@ enum Role {
 }
 
 enum StoreStatus {
+  PENDING // self-service: cadastrado, aguardando 1º pagamento (não público)
   TRIALING
   ACTIVE
   PAST_DUE
@@ -73,6 +74,7 @@ model Store {
   accentColor    String? // hex, ex.: #16a34a
   isActive       Boolean     @default(true) // legado: derivado de status (live = não SUSPENDED/CANCELED)
   status         StoreStatus @default(ACTIVE)
+  published      Boolean     @default(true) // vitrine só vai ao ar quando publicada (self-service: false até concluir onboarding)
   plan           Plan        @default(ESSENCIAL)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -91,14 +93,17 @@ model Store {
 
 /// Dono/operador de uma loja. Pertence a exatamente uma Store.
 model User {
-  id           String   @id @default(cuid())
-  storeId      String
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role     @default(OWNER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  storeId            String
+  email              String    @unique
+  passwordHash       String
+  name               String
+  role               Role      @default(OWNER)
+  emailVerified      DateTime? // null = não verificado
+  emailVerifyToken   String?   @unique
+  emailVerifyExpires DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 

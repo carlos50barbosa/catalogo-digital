@@ -99,6 +99,14 @@ export class AsaasGateway implements BillingGateway {
     await asaasFetch(`/subscriptions/${subscriptionId}`, { method: 'DELETE' })
   }
 
+  async getSubscriptionPaymentUrl(subscriptionId: string): Promise<string | null> {
+    // 1ª cobrança da assinatura → página de pagamento hospedada (invoiceUrl).
+    const data = await asaasFetch<{ data?: Array<{ invoiceUrl?: string }> }>(
+      `/subscriptions/${subscriptionId}/payments?limit=1`,
+    )
+    return data.data?.[0]?.invoiceUrl ?? null
+  }
+
   async createOneOffCharge(input: {
     customerId: string
     billingType: string

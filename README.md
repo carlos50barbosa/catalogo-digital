@@ -117,6 +117,10 @@ Senha:  demo1234
 | `ASAAS_API_KEY`   | — (Parte B) | Chave da API do Asaas (vazio = billing semi-manual, sem gateway)|
 | `ASAAS_WEBHOOK_TOKEN` | — (B)   | Token do webhook (validado no header `asaas-access-token`)       |
 | `ASAAS_BASE_URL`  | —           | Opcional; derivado de `ASAAS_ENV` se omitido                     |
+| `SIGNUP_MODE`     | —           | `PAY_TO_ACTIVATE` (padrão) ou `TRIAL`                            |
+| `TRIAL_DAYS`      | —           | Dias de teste no modo `TRIAL` (default 7)                        |
+| `MIN_PRODUCTS_TO_PUBLISH` | —   | Mínimo de produtos para publicar a loja (default 5)             |
+| `EMAIL_HOST`/`EMAIL_PORT`/`EMAIL_USER`/`EMAIL_PASS`/`EMAIL_FROM`/`EMAIL_SECURE` | — | SMTP transacional. Sem `EMAIL_HOST`, o link de verificação é logado no console (dev). |
 
 Veja `.env.example`.
 
@@ -360,11 +364,28 @@ O `postbuild` cuida da cópia de `static`/`public`.
 
 > Acesso de teste após o seed — Plataforma: `admin@plataforma.com` / `admin1234` (`/admin-plataforma`).
 
+## Cadastro self-service (dono se cadastra sozinho)
+
+Caminho alternativo ao onboarding manual (os dois coexistem, mesma camada de billing):
+
+1. **`/cadastro`** — cria `Store` (status `PENDING`, não publicada) + `User` OWNER + `StoreSettings`,
+   com slug único e **verificação de e-mail** (link enviado; em dev vai pro console).
+2. **`/cadastro/plano`** (após verificar o e-mail) — escolhe plano + forma de pagamento + CPF/CNPJ,
+   cria cliente + assinatura no Asaas e **redireciona ao checkout hospedado** (cartão nunca passa
+   pelo servidor). Modo via `SIGNUP_MODE`: `PAY_TO_ACTIVATE` (publica só após pagar) ou `TRIAL`.
+3. **Webhook** (`/api/webhooks/asaas`) ativa a loja automaticamente (`PENDING`/`TRIALING` → `ACTIVE`)
+   e dispara o **e-mail de boas-vindas**. `/cadastro/aguardando` faz polling para PIX/boleto.
+4. **`/painel/onboarding`** — assistente guiado (marca → entrega → produtos → publicar). Exige um
+   mínimo de produtos (`MIN_PRODUCTS_TO_PUBLISH`) para o "Publicar" liberar a vitrine.
+5. **`/painel/assinatura`** — self-service de **upgrade/downgrade**, atualizar pagamento e **cancelar**.
+
+A vitrine só fica pública quando `status` é `ACTIVE`/`TRIALING` **e** `published = true`.
+
 ## Fora do escopo do MVP (FASE 2)
 
-Fluxo de **status/confirmação** de pedido (no MVP o pedido é só "gerado") · **cadastro self-service**
-de loja com checkout online + **upgrade self-service** com pagamento na hora (no MVP o onboard e a
-assinatura são assistidos; a cobrança recorrente já roda via Asaas) · estoque numérico e variações ·
-dashboard de métricas avançado · domínio/subdomínio próprio por loja · storage S3 (a interface já
-está pronta) · fidelidade/promoções para a base de clientes · API oficial do WhatsApp (no MVP é `wa.me`).
+Fluxo de **status/confirmação** de pedido (no MVP o pedido é só "gerado") · estoque numérico e
+variações · dashboard de métricas avançado · domínio/subdomínio próprio por loja · storage S3 (a
+interface já está pronta) · fidelidade/promoções para a base de clientes · cupons/indicações ·
+cancelamento de assinatura no **fim do ciclo** (hoje é imediato; precisa de cron) · API oficial do
+WhatsApp (no MVP é `wa.me`).
 ```

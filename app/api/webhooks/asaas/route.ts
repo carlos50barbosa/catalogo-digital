@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { config } from '@/lib/config'
 import { prisma } from '@/lib/prisma'
+import { sendWelcomeEmail } from '@/lib/email'
 import {
   eventAlreadyProcessed,
   recordBillingEvent,
@@ -67,7 +68,18 @@ export async function POST(req: NextRequest) {
   if (storeId) {
     switch (event) {
       case 'PAYMENT_CONFIRMED':
-      case 'PAYMENT_RECEIVED':
+      case 'PAYMENT_RECEIVED': {
+        // Primeira ativação (self-service): a loja sai de PENDING/TRIALING.
+        const store = await prisma.store.findUnique({
+          where: { id: storeId },
+          select: {
+            status: true,
+            name: true,
+            users: { where: { role: 'OWNER' }, take: 1, select: { email: true } },
+          },
+        })
+        const firstActivation = store?.status === 'PENDING' || store?.status === 'TRIALING'
+
         await setSubscriptionStatus(storeId, 'ACTIVE')
         await setStoreStatus(storeId, 'ACTIVE')
         if (payment?.dueDate) {
@@ -76,7 +88,16 @@ export async function POST(req: NextRequest) {
             data: { nextDueDate: addMonths(new Date(payment.dueDate), 1) },
           })
         }
+
+        if (firstActivation && store?.users[0]?.email) {
+          try {
+            await sendWelcomeEmail(store.users[0].email, store.name, `${config.appUrl}/painel`)
+          } catch {
+            // e-mail é secundário; não falha o webhook
+          }
+        }
         break
+      }
       case 'PAYMENT_OVERDUE':
         await setStoreStatus(storeId, 'PAST_DUE')
         break

@@ -17,6 +17,7 @@ import { getOrderStats } from '@/lib/data/orders'
 import { CopyButton } from '@/components/admin/CopyButton'
 import { formatBRL } from '@/lib/format'
 import { config } from '@/lib/config'
+import { Rocket } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,6 +48,25 @@ export default async function DashboardPage() {
         <h1 className="font-display text-2xl font-bold text-neutral-900">Olá! 👋</h1>
         <p className="text-neutral-500">Bem-vindo ao painel de {name}.</p>
       </div>
+
+      {/* Onboarding pendente: loja ainda não publicada */}
+      {store && !store.published && (
+        <Link
+          href="/painel/onboarding"
+          className="flex items-center gap-4 rounded-2xl border border-accent bg-accent/5 p-5 shadow-card transition hover:bg-accent/10"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-fg">
+            <Rocket className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-display font-bold text-neutral-900">Termine de montar sua loja</p>
+            <p className="text-sm text-neutral-500">
+              Sua loja ainda não está publicada. Conclua a configuração para ir ao ar.
+            </p>
+          </div>
+          <span className="shrink-0 text-sm font-semibold text-accent">Continuar →</span>
+        </Link>
+      )}
 
       {/* Estatísticas de pedidos GERADOS (últimos 30 dias) */}
       <div>

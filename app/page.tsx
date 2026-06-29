@@ -34,10 +34,16 @@ export default function HomePage() {
         ))}
       </div>
 
-      <div className="mt-10">
+      <div className="mt-10 flex flex-wrap justify-center gap-3">
+        <Link
+          href="/cadastro"
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-green-600 px-6 text-sm font-medium text-white hover:bg-green-700"
+        >
+          Criar minha loja
+        </Link>
         <Link
           href="/painel/login"
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-neutral-900 px-6 text-sm font-medium text-white hover:bg-neutral-800"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
         >
           Acessar o painel
         </Link>

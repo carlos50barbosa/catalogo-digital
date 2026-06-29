@@ -10,7 +10,7 @@ import {
   serializeProduct,
 } from '@/lib/serialize'
 import { getOpenStatus } from '@/lib/store-hours'
-import { isCanceled, isSuspended } from '@/lib/store-status'
+import { isStorePublic, isSuspended } from '@/lib/store-status'
 import { safeHexColor } from '@/lib/utils'
 import { config } from '@/lib/config'
 import { StorefrontClient } from '@/components/storefront/StorefrontClient'
@@ -26,7 +26,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const store = await getStoreBySlug(slug)
-  if (!store || isCanceled(store.status)) return { title: 'Loja não encontrada' }
+  if (!store || !isStorePublic(store.status, store.published)) return { title: 'Loja não encontrada' }
 
   const title = `${store.name} — Peça pelo WhatsApp`
   const description = `Faça seu pedido no ${store.name}: catálogo online com entrega e retirada, direto pelo WhatsApp.`
@@ -54,8 +54,9 @@ export default async function StorefrontPage({
 }) {
   const { slug } = await params
   const store = await getStoreBySlug(slug)
-  if (!store || isCanceled(store.status)) notFound()
+  if (!store) notFound()
   if (isSuspended(store.status)) return <StoreUnavailable name={store.name} />
+  if (!isStorePublic(store.status, store.published)) notFound() // PENDING/CANCELED/não publicada
 
   const settings = serializeSettings(store.settings)
   const [cats, prods] = await Promise.all([

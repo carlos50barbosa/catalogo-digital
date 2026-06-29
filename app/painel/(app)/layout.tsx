@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { requireStore } from '@/lib/auth-helpers'
 import { getStoreForPanel } from '@/lib/data/stores'
 import { AdminShell } from '@/components/admin/AdminShell'
@@ -18,6 +19,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   // Barreira de autenticação: storeId vem SEMPRE da sessão.
   const session = await requireStore()
   const store = await getStoreForPanel(session.storeId)
+
+  // Loja PENDING (self-service, ainda não pagou) não usa o painel — vai pro checkout.
+  if (store?.status === 'PENDING') redirect('/cadastro/plano')
 
   const name = store?.name ?? 'Minha loja'
   const slug = store?.slug ?? session.storeSlug

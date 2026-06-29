@@ -62,6 +62,19 @@ export const settingsSchema = z.object({
     .nullable(),
 })
 
+export const signupSchema = z.object({
+  ownerName: z.string().min(1, 'Informe seu nome').max(120),
+  storeName: z.string().min(1, 'Informe o nome do mercadinho').max(120),
+  whatsapp: z
+    .string()
+    .min(10, 'WhatsApp incompleto')
+    .max(20)
+    .regex(/^\d+$/, 'Use apenas números, com DDD (ex.: 5582999999999)'),
+  email: z.string().email('E-mail inválido'),
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres').max(100),
+  slug: z.string().max(60).optional(),
+})
+
 export const checkoutSchema = z.object({
   slug: z.string().min(1),
   customerName: z.string().min(1, 'Informe seu nome').max(120),

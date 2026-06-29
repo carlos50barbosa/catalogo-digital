@@ -3,6 +3,7 @@ import type { StoreStatus } from '@prisma/client'
 // Efeitos do ciclo de status da loja, centralizados.
 
 export const STATUS_LABELS: Record<StoreStatus, string> = {
+  PENDING: 'Aguardando pagamento',
   TRIALING: 'Em teste',
   ACTIVE: 'Ativa',
   PAST_DUE: 'Pagamento pendente',
@@ -10,9 +11,14 @@ export const STATUS_LABELS: Record<StoreStatus, string> = {
   CANCELED: 'Cancelada',
 }
 
-/** Vitrine pública funciona? (tolerância em PAST_DUE) */
+/** Status "vivo" (tolerância em PAST_DUE). PENDING/SUSPENDED/CANCELED são falsos. */
 export function isStorefrontLive(status: StoreStatus): boolean {
   return status === 'ACTIVE' || status === 'TRIALING' || status === 'PAST_DUE'
+}
+
+/** Vitrine pública = status vivo E publicada (onboarding concluído). */
+export function isStorePublic(status: StoreStatus, published: boolean): boolean {
+  return published && isStorefrontLive(status)
 }
 
 export function isSuspended(status: StoreStatus): boolean {

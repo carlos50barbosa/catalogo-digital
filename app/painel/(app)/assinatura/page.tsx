@@ -7,6 +7,7 @@ import { planFeatures, productLimit, PLANS, ORDERED_PLANS } from '@/lib/plans'
 import { STATUS_LABELS } from '@/lib/store-status'
 import { formatBRL, formatDateTimeBR, decimalToNumber } from '@/lib/format'
 import { config } from '@/lib/config'
+import { SubscriptionManager } from '@/components/admin/SubscriptionManager'
 
 export const dynamic = 'force-dynamic'
 
@@ -129,6 +130,9 @@ export default async function AssinaturaPage() {
           </a>
         </div>
       </div>
+
+      {/* Self-service: mudar plano / pagamento / cancelar */}
+      <SubscriptionManager currentPlan={plan} hasSubscription={!!subscription} />
 
       {/* Outros planos */}
       <div>
