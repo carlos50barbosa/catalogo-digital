@@ -1,57 +1,124 @@
 import Link from 'next/link'
-import { Store, Smartphone, MessageCircle } from 'lucide-react'
+import {
+  Store,
+  Smartphone,
+  MessageCircle,
+  ReceiptText,
+  NotebookPen,
+  Users,
+  QrCode,
+} from 'lucide-react'
 
-// Página raiz institucional simples. A landing de vendas do SaaS é FASE 2.
+// Página raiz institucional. Apresenta as principais funcionalidades do SaaS.
 export const metadata = {
   robots: { index: false },
 }
 
+const FEATURES = [
+  {
+    icon: Smartphone,
+    title: 'Vitrine no celular',
+    desc: 'Catálogo rápido e bonito no seu link próprio (/sua-loja), com foto, categorias e busca.',
+  },
+  {
+    icon: MessageCircle,
+    title: 'Pedido pelo WhatsApp',
+    desc: 'Sem comissão de marketplace: o cliente monta o carrinho e o pedido vai direto pro WhatsApp da loja, já formatado.',
+  },
+  {
+    icon: ReceiptText,
+    title: 'Importe pela nota fiscal',
+    desc: 'Suba o XML da NF-e e monte o catálogo casando os itens pelo código de barras — também por CSV ou pela câmera.',
+  },
+  {
+    icon: NotebookPen,
+    title: 'Fiado digital',
+    desc: 'Caderneta de fiado por cliente: saldo, histórico imutável e cobrança pronta no WhatsApp.',
+  },
+  {
+    icon: Users,
+    title: 'Clientes e pedidos',
+    desc: 'Base de clientes reconhecida por telefone e histórico de pedidos, tudo organizado no painel.',
+  },
+  {
+    icon: QrCode,
+    title: 'Divulgação com QR Code',
+    desc: 'Gere um cartaz com o QR Code da loja para os clientes pedirem pelo celular na hora.',
+  },
+]
+
 export default function HomePage() {
+  const year = new Date().getFullYear()
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-green-600 text-white">
-        <Store className="h-7 w-7" />
-      </div>
-      <h1 className="font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
-        Catálogo Digital
-      </h1>
-      <p className="mt-3 max-w-xl text-neutral-600">
-        Vitrine digital + pedidos por WhatsApp para mercadinhos de bairro. Sem comissão de
-        marketplace: o pedido vai direto pro WhatsApp da loja.
-      </p>
-
-      <div className="mt-10 grid w-full gap-4 sm:grid-cols-3">
-        {[
-          { icon: Smartphone, title: 'Vitrine no celular', desc: 'Catálogo rápido e bonito.' },
-          { icon: MessageCircle, title: 'Pedido no WhatsApp', desc: 'Mensagem já formatada.' },
-          { icon: Store, title: 'Painel simples', desc: 'O dono no controle.' },
-        ].map((f) => (
-          <div key={f.title} className="rounded-2xl border border-neutral-200 bg-white p-5 text-left shadow-card">
-            <f.icon className="h-6 w-6 text-green-600" />
-            <h2 className="mt-3 font-display font-semibold text-neutral-900">{f.title}</h2>
-            <p className="mt-1 text-sm text-neutral-600">{f.desc}</p>
+    <div className="flex min-h-screen flex-col bg-neutral-50">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 py-16">
+        {/* Hero */}
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-green-600 text-white">
+            <Store className="h-7 w-7" />
           </div>
-        ))}
-      </div>
+          <h1 className="font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
+            Catálogo Digital
+          </h1>
+          <p className="mt-3 max-w-xl text-neutral-600">
+            Vitrine digital + pedidos por WhatsApp para mercadinhos de bairro. Tudo o que a sua loja
+            precisa para vender online — <strong>sem comissão de marketplace</strong>.
+          </p>
 
-      <div className="mt-10 flex flex-wrap justify-center gap-3">
-        <Link
-          href="/cadastro"
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-green-600 px-6 text-sm font-medium text-white hover:bg-green-700"
-        >
-          Criar minha loja
-        </Link>
-        <Link
-          href="/painel/login"
-          className="inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
-        >
-          Acessar o painel
-        </Link>
-      </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/cadastro"
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-green-600 px-6 text-sm font-medium text-white hover:bg-green-700"
+            >
+              Criar minha loja
+            </Link>
+            <Link
+              href="/painel/login"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white px-6 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
+            >
+              Acessar o painel
+            </Link>
+          </div>
+        </div>
 
-      <p className="mt-8 text-xs text-neutral-400">
-        Tem uma loja? Acesse pelo link <code>/sua-loja</code>.
-      </p>
-    </main>
+        {/* Funcionalidades */}
+        <section className="mt-14 w-full">
+          <h2 className="text-center font-display text-xl font-bold text-neutral-900">
+            Tudo no mesmo lugar
+          </h2>
+          <p className="mx-auto mt-1 max-w-lg text-center text-sm text-neutral-500">
+            Do catálogo ao recebimento, com as ferramentas do dia a dia do mercadinho.
+          </p>
+
+          <div className="mt-8 grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-2xl border border-neutral-200 bg-white p-5 text-left shadow-card"
+              >
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                  <f.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-3 font-display font-semibold text-neutral-900">{f.title}</h3>
+                <p className="mt-1 text-sm text-neutral-600">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <p className="mt-10 text-xs text-neutral-400">
+          Tem uma loja? Acesse pelo link <code>/sua-loja</code>.
+        </p>
+      </main>
+
+      {/* Rodapé */}
+      <footer className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-6 text-center text-sm text-neutral-500">
+          © {year} Catálogo Digital · Desenvolvido por{' '}
+          <span className="font-medium text-neutral-700">Serviços Tech</span>
+        </div>
+      </footer>
+    </div>
   )
 }
