@@ -9,7 +9,7 @@ import {
   Receipt,
   Undo2,
 } from 'lucide-react'
-import { requireStore } from '@/lib/auth-helpers'
+import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getCustomer } from '@/lib/data/customers'
 import {
   getFiadoAccess,
@@ -35,7 +35,7 @@ export default async function FiadoCustomerPage({
   params: Promise<{ customerId: string }>
 }) {
   const { customerId } = await params
-  const { storeId } = await requireStore()
+  const { storeId } = await requireOnboardedStore()
   const access = await getFiadoAccess(storeId)
 
   if (!access.planAllows) return <FiadoUpsell />

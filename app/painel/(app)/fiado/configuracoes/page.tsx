@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { requireStore } from '@/lib/auth-helpers'
+import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getFiadoAccess } from '@/lib/data/fiado'
 import { decimalToNumber } from '@/lib/format'
 import { FiadoUpsell } from '@/components/admin/FiadoUpsell'
@@ -9,7 +9,7 @@ import { FiadoSettingsForm } from '@/components/admin/FiadoSettingsForm'
 export const dynamic = 'force-dynamic'
 
 export default async function FiadoSettingsPage() {
-  const { storeId } = await requireStore()
+  const { storeId } = await requireOnboardedStore()
   const access = await getFiadoAccess(storeId)
 
   if (!access.planAllows) return <FiadoUpsell />

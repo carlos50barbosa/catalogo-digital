@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ShoppingBag, ChevronRight, Truck, Package, Phone } from 'lucide-react'
-import { requireStore } from '@/lib/auth-helpers'
+import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { listOrders } from '@/lib/data/orders'
 import { Badge } from '@/components/ui/badge'
 import { formatBRL, decimalToNumber, formatDateTimeBR } from '@/lib/format'
@@ -8,7 +8,7 @@ import { formatBRL, decimalToNumber, formatDateTimeBR } from '@/lib/format'
 export const dynamic = 'force-dynamic'
 
 export default async function OrdersPage() {
-  const { storeId } = await requireStore()
+  const { storeId } = await requireOnboardedStore()
   const orders = await listOrders(storeId)
 
   return (

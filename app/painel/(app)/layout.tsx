@@ -28,9 +28,14 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const accent = safeHexColor(store?.accentColor, config.defaultAccentColor)
   const access = panelAccess(store?.status ?? 'ACTIVE')
 
+  // Loja ativa mas ainda não publicada → painel "travado" no onboarding:
+  // as telas operacionais ficam desabilitadas no menu até a loja ir ao ar.
+  const live = store?.status === 'ACTIVE' || store?.status === 'TRIALING'
+  const locked = !!store && live && !store.published
+
   return (
     <div style={{ '--accent': accent } as React.CSSProperties}>
-      <AdminShell storeName={name} storeSlug={slug}>
+      <AdminShell storeName={name} storeSlug={slug} locked={locked}>
         <PanelStatusGate access={access} />
         {children}
       </AdminShell>

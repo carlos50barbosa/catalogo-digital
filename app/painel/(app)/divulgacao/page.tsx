@@ -1,4 +1,4 @@
-import { requireStore } from '@/lib/auth-helpers'
+import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getStoreForPanel } from '@/lib/data/stores'
 import { QrPoster } from '@/components/admin/QrPoster'
 import { config } from '@/lib/config'
@@ -6,7 +6,7 @@ import { config } from '@/lib/config'
 export const dynamic = 'force-dynamic'
 
 export default async function DivulgacaoPage() {
-  const { storeId } = await requireStore()
+  const { storeId } = await requireOnboardedStore()
   const store = await getStoreForPanel(storeId)
   const slug = store?.slug ?? ''
   const url = `${config.appUrl}/${slug}`

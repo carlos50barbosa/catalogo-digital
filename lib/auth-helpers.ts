@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
+import { prisma } from '@/lib/prisma'
 import type { Role } from '@/lib/types'
 
 export type SessionStore = {
@@ -36,6 +37,26 @@ export async function requireStore(): Promise<SessionStore> {
     name: user.name ?? '',
     email: user.email ?? '',
   }
+}
+
+/**
+ * Como requireStore, mas FORÇA o onboarding: se a loja está ativa (ACTIVE/TRIALING)
+ * porém ainda NÃO publicada, redireciona para /painel/onboarding. Usar nas páginas
+ * "operacionais" do painel (dashboard, pedidos, clientes, fiado, divulgação) para
+ * travar o acesso até a loja ir ao ar. As páginas de SETUP (onboarding, configurações,
+ * produtos, categorias, importar, assinatura) seguem com requireStore — senão o próprio
+ * onboarding (que leva a essas telas) não poderia ser concluído.
+ */
+export async function requireOnboardedStore(): Promise<SessionStore> {
+  const session = await requireStore()
+  const store = await prisma.store.findUnique({
+    where: { id: session.storeId },
+    select: { status: true, published: true },
+  })
+  if (store && !store.published && (store.status === 'ACTIVE' || store.status === 'TRIALING')) {
+    redirect('/painel/onboarding')
+  }
+  return session
 }
 
 /**

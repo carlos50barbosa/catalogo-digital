@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Users, Phone, MapPin, NotebookPen } from 'lucide-react'
-import { requireStore } from '@/lib/auth-helpers'
+import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { listCustomers } from '@/lib/data/customers'
 import { getFiadoAccess } from '@/lib/data/fiado'
 import { formatDateTimeBR } from '@/lib/format'
@@ -8,7 +8,7 @@ import { formatDateTimeBR } from '@/lib/format'
 export const dynamic = 'force-dynamic'
 
 export default async function CustomersPage() {
-  const { storeId } = await requireStore()
+  const { storeId } = await requireOnboardedStore()
   const [customers, fiado] = await Promise.all([listCustomers(storeId), getFiadoAccess(storeId)])
   const fiadoOn = fiado.available
 

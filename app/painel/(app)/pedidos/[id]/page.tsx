@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Truck, Package, MapPin, CreditCard, Phone, User } from 'lucide-react'
-import { requireStore } from '@/lib/auth-helpers'
+import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getOrder } from '@/lib/data/orders'
 import { getFiadoAccess, getFiadoEntryByOrder } from '@/lib/data/fiado'
 import { Badge } from '@/components/ui/badge'
@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { storeId } = await requireStore()
+  const { storeId } = await requireOnboardedStore()
   const order = await getOrder(storeId, id) // escopado por storeId
   if (!order) notFound()
 
