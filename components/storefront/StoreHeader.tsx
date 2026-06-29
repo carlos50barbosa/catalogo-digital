@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { ShoppingCart, Search, Store as StoreIcon, Clock, Truck, ShoppingBag } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { uploadSrc } from '@/lib/utils'
 import type { SerializedStore, SerializedSettings } from '@/lib/types'
 import type { OpenStatus } from '@/lib/store-hours'
 
@@ -42,7 +43,7 @@ export function StoreHeader({
         <div className="flex items-center gap-3">
           <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
             {store.logoUrl ? (
-              <Image src={store.logoUrl} alt={`Logo ${store.name}`} fill className="object-cover" sizes="48px" />
+              <Image src={uploadSrc(store.logoUrl) as string} alt={`Logo ${store.name}`} fill className="object-cover" sizes="48px" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-neutral-400">
                 <StoreIcon className="h-6 w-6" aria-hidden />

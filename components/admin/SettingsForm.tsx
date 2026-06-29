@@ -13,6 +13,7 @@ import { Select } from '@/components/ui/select'
 import { Label, FieldError } from '@/components/ui/label'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { WEEKDAY_LABELS } from '@/lib/store-hours'
+import { uploadSrc } from '@/lib/utils'
 import type { Fulfillment, OpeningHours } from '@/lib/types'
 
 export type SettingsInitial = {
@@ -106,7 +107,7 @@ export function SettingsForm({
                 {logoPreview ? (
                   <Image src={logoPreview} alt="Pré-visualização" fill className="object-cover" sizes="80px" unoptimized />
                 ) : logoUrl ? (
-                  <Image src={logoUrl} alt="Logo atual" fill className="object-cover" sizes="80px" />
+                  <Image src={uploadSrc(logoUrl) as string} alt="Logo atual" fill className="object-cover" sizes="80px" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-neutral-300">
                     <StoreIcon className="h-7 w-7" />

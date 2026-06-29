@@ -5,6 +5,7 @@ import Image from 'next/image'
 import QRCode from 'qrcode'
 import { Download, Printer, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { uploadSrc } from '@/lib/utils'
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -25,6 +26,7 @@ export function QrPoster({
   logoUrl: string | null
 }) {
   const [qr, setQr] = useState<string>('')
+  const logoSrc = uploadSrc(logoUrl)
 
   useEffect(() => {
     // Correção de erro alta (H) para suportar logo no centro sem quebrar a leitura.
@@ -47,9 +49,9 @@ export function QrPoster({
     ctx.drawImage(qrImg, 0, 0, size, size)
 
     // logo no centro (opcional, com fundo branco para não atrapalhar a leitura)
-    if (logoUrl) {
+    if (logoSrc) {
       try {
-        const logo = await loadImage(logoUrl)
+        const logo = await loadImage(logoSrc)
         const box = size * 0.2
         const pad = box * 0.12
         const x = (size - box) / 2
@@ -72,9 +74,9 @@ export function QrPoster({
       {/* Cartaz (área de impressão) */}
       <div className="print-area mx-auto max-w-sm">
         <div className="rounded-3xl border-2 border-accent bg-white p-8 text-center shadow-card">
-          {logoUrl && (
+          {logoSrc && (
             <div className="relative mx-auto mb-3 h-16 w-16 overflow-hidden rounded-2xl">
-              <Image src={logoUrl} alt={storeName} fill className="object-cover" sizes="64px" />
+              <Image src={logoSrc} alt={storeName} fill className="object-cover" sizes="64px" />
             </div>
           )}
           <h2 className="font-display text-2xl font-bold text-neutral-900">{storeName}</h2>

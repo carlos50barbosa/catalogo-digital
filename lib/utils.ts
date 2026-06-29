@@ -6,6 +6,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * URL para renderizar uma imagem enviada. Os arquivos são gravados em UPLOAD_DIR e
+ * a rota /api/uploads (servida pelo PRÓPRIO app) os entrega de forma consistente.
+ * Em produção o Nginx pode ter um `location /uploads/` com `alias` divergente do
+ * UPLOAD_DIR (→ 404); por isso apontamos para /api/uploads, que não depende dessa
+ * config. Mantemos /uploads no banco; a conversão é só na renderização.
+ */
+export function uploadSrc(url: string | null | undefined): string | null {
+  if (!url) return null
+  return url.startsWith('/uploads/') ? '/api' + url : url
+}
+
 /** Normaliza uma cor hex; devolve fallback se inválida. */
 export function safeHexColor(value: string | null | undefined, fallback: string): string {
   if (!value) return fallback

@@ -11,7 +11,7 @@ import {
 } from '@/lib/serialize'
 import { getOpenStatus } from '@/lib/store-hours'
 import { isStorePublic, isSuspended } from '@/lib/store-status'
-import { safeHexColor } from '@/lib/utils'
+import { safeHexColor, uploadSrc } from '@/lib/utils'
 import { config } from '@/lib/config'
 import { StorefrontClient } from '@/components/storefront/StorefrontClient'
 import { StoreUnavailable } from '@/components/storefront/StoreUnavailable'
@@ -42,7 +42,7 @@ export async function generateMetadata({
       type: 'website',
       url,
       locale: 'pt_BR',
-      images: store.logoUrl ? [{ url: store.logoUrl }] : [],
+      images: store.logoUrl ? [{ url: `${config.appUrl}${uploadSrc(store.logoUrl)}` }] : [],
     },
   }
 }
@@ -78,7 +78,7 @@ export default async function StorefrontPage({
     telephone: `+${store.whatsappNumber}`,
     url: `${config.appUrl}/${store.slug}`,
     ...(settings.address ? { address: settings.address } : {}),
-    ...(store.logoUrl ? { image: `${config.appUrl}${store.logoUrl}` } : {}),
+    ...(store.logoUrl ? { image: `${config.appUrl}${uploadSrc(store.logoUrl)}` } : {}),
   }
 
   return (

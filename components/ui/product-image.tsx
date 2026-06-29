@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { ShoppingBasket } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, uploadSrc } from '@/lib/utils'
 
 /**
  * Imagem de produto com fallback.
@@ -26,7 +26,7 @@ export function ProductImage({
     <div className={cn('relative overflow-hidden bg-neutral-100', className)}>
       {isReal ? (
         <Image
-          src={src as string}
+          src={uploadSrc(src) as string}
           alt={alt}
           fill
           sizes={sizes ?? '(max-width: 640px) 45vw, 220px'}
