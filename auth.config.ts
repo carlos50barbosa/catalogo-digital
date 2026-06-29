@@ -17,12 +17,16 @@ export const authConfig = {
     // Usado pelo middleware para proteger /painel/* (exceto o login).
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl
-      const isLogin = pathname === '/painel/login'
       const isPanel = pathname.startsWith('/painel')
       const isPlatform = pathname.startsWith('/admin-plataforma')
+      // Rotas do painel que são PÚBLICAS (login e recuperação de senha).
+      const isPublicPanel =
+        pathname === '/painel/login' ||
+        pathname.startsWith('/painel/recuperar-senha') ||
+        pathname.startsWith('/painel/redefinir-senha')
       // Painel da plataforma: exige login (o papel SUPERADMIN é checado no layout).
       if (isPlatform) return !!auth?.user
-      if (isPanel && !isLogin) {
+      if (isPanel && !isPublicPanel) {
         return !!auth?.user // não autenticado => redireciona para signIn
       }
       return true

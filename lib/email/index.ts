@@ -67,6 +67,20 @@ export async function sendVerificationEmail(to: string, link: string): Promise<v
   })
 }
 
+export async function sendPasswordResetEmail(to: string, link: string): Promise<void> {
+  await sendEmail({
+    to,
+    subject: 'Redefinir sua senha — Catálogo Digital',
+    text: `Para redefinir sua senha, acesse: ${link}`,
+    html: layout(
+      'Redefinir sua senha',
+      `<p>Recebemos um pedido para redefinir a senha do seu painel. O link vale por 1 hora.</p>
+       <p style="margin:20px 0">${button(link, 'Redefinir senha')}</p>
+       <p style="font-size:13px;color:#5a7184">Se não foi você, pode ignorar este e-mail — sua senha continua a mesma.</p>`,
+    ),
+  })
+}
+
 export async function sendWelcomeEmail(to: string, storeName: string, panelUrl: string): Promise<void> {
   await sendEmail({
     to,

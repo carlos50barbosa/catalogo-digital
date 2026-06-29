@@ -62,6 +62,14 @@ export const settingsSchema = z.object({
     .nullable(),
 })
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().email('E-mail inválido'),
+})
+
+export const passwordResetSchema = z.object({
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres').max(100),
+})
+
 export const signupSchema = z.object({
   ownerName: z.string().min(1, 'Informe seu nome').max(120),
   storeName: z.string().min(1, 'Informe o nome do mercadinho').max(120),

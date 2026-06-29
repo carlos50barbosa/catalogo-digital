@@ -35,6 +35,12 @@ export function LoginForm() {
       <Button type="submit" loading={pending} className="w-full" size="lg">
         Entrar
       </Button>
+
+      <p className="text-center text-sm">
+        <a href="/painel/recuperar-senha" className="font-medium text-accent underline">
+          Esqueci minha senha
+        </a>
+      </p>
     </form>
   )
 }
