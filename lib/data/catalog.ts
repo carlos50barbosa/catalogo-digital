@@ -18,3 +18,15 @@ export function searchCatalogItems(query: string, take = 40) {
 export function getCatalogItem(id: string) {
   return prisma.catalogItem.findUnique({ where: { id } })
 }
+
+/**
+ * Importação por NF-e: itens da BIBLIOTECA (global) que têm um dos GTINs.
+ * É o que faz a biblioteca compartilhada brilhar — itens comuns entram prontos
+ * (nome + foto) e a nota só agrega o custo.
+ */
+export function findCatalogItemsByBarcodes(barcodes: string[]) {
+  if (barcodes.length === 0) return Promise.resolve([])
+  return prisma.catalogItem.findMany({
+    where: { barcode: { in: barcodes } },
+  })
+}

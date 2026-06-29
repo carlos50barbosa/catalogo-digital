@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Nota 2 — use DEPOIS de importar a nota 1.
+  Os 3 primeiros itens (Coca, Arroz, Leite) já vão existir na loja com código de
+  barras, então caem em "Atualizar" (só o custo muda). O Detergente Ypê ainda não
+  foi importado: cai em "Da biblioteca". Chave de acesso diferente da nota 1.
+-->
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe Id="NFe35260612345678000199550010000001021000001025" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <natOp>VENDA</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>102</nNF>
+      </ide>
+      <emit>
+        <CNPJ>12345678000199</CNPJ>
+        <xNome>DISTRIBUIDORA BOM PRECO LTDA</xNome>
+      </emit>
+      <dest>
+        <xNome>MERCADINHO DEMO</xNome>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>FORN-001</cProd>
+          <cEAN>7894900011517</cEAN>
+          <xProd>REFRIG COCA COLA 2L PET</xProd>
+          <NCM>22021000</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>12.0000</qCom>
+          <vUnCom>5.7500000000</vUnCom>
+          <vProd>69.00</vProd>
+        </prod>
+      </det>
+      <det nItem="2">
+        <prod>
+          <cProd>FORN-003</cProd>
+          <cEAN>7896006711524</cEAN>
+          <xProd>ARROZ TIO JOAO T1 5KG</xProd>
+          <NCM>10063021</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>FD</uCom>
+          <qCom>10.0000</qCom>
+          <vUnCom>21.5000000000</vUnCom>
+          <vProd>215.00</vProd>
+        </prod>
+      </det>
+      <det nItem="3">
+        <prod>
+          <cProd>FORN-004</cProd>
+          <cEAN>7898080640017</cEAN>
+          <xProd>LEITE INTEGRAL ITALAC 1L</xProd>
+          <NCM>04012010</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>24.0000</qCom>
+          <vUnCom>3.4500000000</vUnCom>
+          <vProd>82.80</vProd>
+        </prod>
+      </det>
+      <det nItem="4">
+        <prod>
+          <cProd>FORN-010</cProd>
+          <cEAN>7896098900116</cEAN>
+          <xProd>DETERGENTE NEUTRO YPE 500ML</xProd>
+          <NCM>34022000</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>24.0000</qCom>
+          <vUnCom>1.8900000000</vUnCom>
+          <vProd>45.36</vProd>
+        </prod>
+      </det>
+    </infNFe>
+  </NFe>
+</nfeProc>

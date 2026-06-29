@@ -18,6 +18,8 @@ type ProductWriteData = {
   catalogItemId?: string | null
   imageUrl?: string | null
   isAvailable?: boolean
+  cost?: number | null
+  barcode?: string | null
 }
 
 /** Vitrine: produtos públicos da loja (respeita showOutOfStock). */
@@ -43,6 +45,18 @@ export function listProducts(storeId: string) {
 /** Busca um produto garantindo que pertence à loja. */
 export function getProduct(storeId: string, id: string) {
   return prisma.product.findFirst({ where: { id, storeId } })
+}
+
+/**
+ * Importação por NF-e: produtos DESTA loja que já têm um dos códigos de barras.
+ * Usado para casar itens da nota com o catálogo existente (status "Atualizar").
+ */
+export function findProductsByBarcodes(storeId: string, barcodes: string[]) {
+  if (barcodes.length === 0) return Promise.resolve([])
+  return prisma.product.findMany({
+    where: { storeId, barcode: { in: barcodes } },
+    include: { category: true },
+  })
 }
 
 export function createProduct(storeId: string, data: ProductWriteData) {

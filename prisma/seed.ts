@@ -90,12 +90,27 @@ async function main() {
         brand: c.brand ?? null,
         suggestedCategory: c.suggestedCategory,
         defaultImageUrl: PLACEHOLDER_IMAGE,
+        barcode: c.barcode ?? null,
       })),
     })
     console.log(`📚 ${CATALOG_ITEMS.length} itens adicionados à biblioteca compartilhada.`)
   } else {
     console.log(`📚 Biblioteca já tem ${catalogCount} itens — pulando.`)
   }
+
+  // 1b) Backfill de códigos de barras (idempotente): preenche o `barcode` dos itens
+  // que ainda não têm — habilita o match por GTIN na importação por NF-e mesmo
+  // numa biblioteca já populada de versões anteriores.
+  let barcodesSet = 0
+  for (const c of CATALOG_ITEMS) {
+    if (!c.barcode) continue
+    const res = await prisma.catalogItem.updateMany({
+      where: { name: c.name, brand: c.brand ?? null, barcode: null },
+      data: { barcode: c.barcode },
+    })
+    barcodesSet += res.count
+  }
+  if (barcodesSet > 0) console.log(`🏷️  ${barcodesSet} códigos de barras preenchidos na biblioteca.`)
 
   // 2) Loja de demonstração (idempotente por slug).
   const store = await prisma.store.upsert({

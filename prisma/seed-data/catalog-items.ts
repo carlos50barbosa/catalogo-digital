@@ -8,40 +8,42 @@ export type SeedCatalogItem = {
   suggestedCategory: string
   /** Dica de unidade usada apenas ao montar produtos de demonstração. */
   unit?: 'UN' | 'KG' | 'L' | 'PCT'
+  /** GTIN/EAN-13 — habilita o match por código de barras na importação por NF-e. */
+  barcode?: string
 }
 
 export const CATALOG_ITEMS: SeedCatalogItem[] = [
   // ---------- Bebidas ----------
-  { name: 'Refrigerante Cola 2L', brand: 'Coca-Cola', suggestedCategory: 'Bebidas' },
-  { name: 'Refrigerante Guaraná 2L', brand: 'Antarctica', suggestedCategory: 'Bebidas' },
+  { name: 'Refrigerante Cola 2L', brand: 'Coca-Cola', suggestedCategory: 'Bebidas', barcode: '7894900011517' },
+  { name: 'Refrigerante Guaraná 2L', brand: 'Antarctica', suggestedCategory: 'Bebidas', barcode: '7891991000116' },
   { name: 'Refrigerante Laranja 2L', brand: 'Fanta', suggestedCategory: 'Bebidas' },
   { name: 'Refrigerante Limão 2L', brand: 'Sprite', suggestedCategory: 'Bebidas' },
   { name: 'Refrigerante Cola Lata 350ml', brand: 'Coca-Cola', suggestedCategory: 'Bebidas' },
-  { name: 'Água Mineral sem Gás 1,5L', brand: 'Indaiá', suggestedCategory: 'Bebidas' },
+  { name: 'Água Mineral sem Gás 1,5L', brand: 'Indaiá', suggestedCategory: 'Bebidas', barcode: '7896017601158' },
   { name: 'Água Mineral sem Gás 500ml', brand: 'Crystal', suggestedCategory: 'Bebidas' },
   { name: 'Água Mineral com Gás 500ml', brand: 'Crystal', suggestedCategory: 'Bebidas' },
   { name: 'Suco de Uva Integral 1L', brand: 'Aurora', suggestedCategory: 'Bebidas' },
   { name: 'Suco de Laranja 1L', brand: 'Del Valle', suggestedCategory: 'Bebidas' },
   { name: 'Néctar de Pêssego 1L', brand: 'Maguary', suggestedCategory: 'Bebidas' },
-  { name: 'Cerveja Pilsen Lata 350ml', brand: 'Skol', suggestedCategory: 'Bebidas' },
+  { name: 'Cerveja Pilsen Lata 350ml', brand: 'Skol', suggestedCategory: 'Bebidas', barcode: '7891149101009' },
   { name: 'Cerveja Pilsen Lata 350ml', brand: 'Brahma', suggestedCategory: 'Bebidas' },
   { name: 'Energético 250ml', brand: 'Red Bull', suggestedCategory: 'Bebidas' },
   { name: 'Isotônico 500ml', brand: 'Gatorade', suggestedCategory: 'Bebidas' },
   { name: 'Chá Gelado Limão 1,5L', brand: 'Lipton', suggestedCategory: 'Bebidas' },
 
   // ---------- Mercearia ----------
-  { name: 'Arroz Branco Tipo 1 5kg', brand: 'Tio João', suggestedCategory: 'Mercearia' },
+  { name: 'Arroz Branco Tipo 1 5kg', brand: 'Tio João', suggestedCategory: 'Mercearia', barcode: '7896006711524' },
   { name: 'Arroz Branco Tipo 1 1kg', brand: 'Camil', suggestedCategory: 'Mercearia' },
-  { name: 'Feijão Carioca 1kg', brand: 'Camil', suggestedCategory: 'Mercearia' },
+  { name: 'Feijão Carioca 1kg', brand: 'Camil', suggestedCategory: 'Mercearia', barcode: '7896006744126' },
   { name: 'Feijão Preto 1kg', brand: 'Kicaldo', suggestedCategory: 'Mercearia' },
-  { name: 'Açúcar Refinado 1kg', brand: 'União', suggestedCategory: 'Mercearia' },
+  { name: 'Açúcar Refinado 1kg', brand: 'União', suggestedCategory: 'Mercearia', barcode: '7891910000197' },
   { name: 'Açúcar Cristal 5kg', brand: 'União', suggestedCategory: 'Mercearia' },
-  { name: 'Café Torrado e Moído 500g', brand: 'Pilão', suggestedCategory: 'Mercearia' },
+  { name: 'Café Torrado e Moído 500g', brand: 'Pilão', suggestedCategory: 'Mercearia', barcode: '7896089012345' },
   { name: 'Café Torrado e Moído 250g', brand: '3 Corações', suggestedCategory: 'Mercearia' },
-  { name: 'Óleo de Soja 900ml', brand: 'Soya', suggestedCategory: 'Mercearia' },
+  { name: 'Óleo de Soja 900ml', brand: 'Soya', suggestedCategory: 'Mercearia', barcode: '7891107101017' },
   { name: 'Azeite de Oliva Extra Virgem 500ml', brand: 'Gallo', suggestedCategory: 'Mercearia' },
   { name: 'Sal Refinado 1kg', brand: 'Cisne', suggestedCategory: 'Mercearia' },
-  { name: 'Macarrão Espaguete 500g', brand: 'Renata', suggestedCategory: 'Mercearia' },
+  { name: 'Macarrão Espaguete 500g', brand: 'Renata', suggestedCategory: 'Mercearia', barcode: '7896022200459' },
   { name: 'Macarrão Parafuso 500g', brand: 'Galo', suggestedCategory: 'Mercearia' },
   { name: 'Farinha de Trigo 1kg', brand: 'Dona Benta', suggestedCategory: 'Mercearia' },
   { name: 'Farinha de Mandioca 1kg', brand: 'Yoki', suggestedCategory: 'Mercearia' },
@@ -50,11 +52,11 @@ export const CATALOG_ITEMS: SeedCatalogItem[] = [
   { name: 'Extrato de Tomate 130g', brand: 'Elefante', suggestedCategory: 'Mercearia' },
   { name: 'Milho Verde em Conserva 170g', brand: 'Quero', suggestedCategory: 'Mercearia' },
   { name: 'Ervilha em Conserva 170g', brand: 'Quero', suggestedCategory: 'Mercearia' },
-  { name: 'Sardinha em Lata 125g', brand: 'Gomes da Costa', suggestedCategory: 'Mercearia' },
+  { name: 'Sardinha em Lata 125g', brand: 'Gomes da Costa', suggestedCategory: 'Mercearia', barcode: '7891167021014' },
   { name: 'Atum Ralado em Lata 170g', brand: 'Gomes da Costa', suggestedCategory: 'Mercearia' },
-  { name: 'Leite Condensado 395g', brand: 'Moça', suggestedCategory: 'Mercearia' },
-  { name: 'Creme de Leite 200g', brand: 'Nestlé', suggestedCategory: 'Mercearia' },
-  { name: 'Achocolatado em Pó 400g', brand: 'Nescau', suggestedCategory: 'Mercearia' },
+  { name: 'Leite Condensado 395g', brand: 'Moça', suggestedCategory: 'Mercearia', barcode: '7891000000427' },
+  { name: 'Creme de Leite 200g', brand: 'Nestlé', suggestedCategory: 'Mercearia', barcode: '7891000100103' },
+  { name: 'Achocolatado em Pó 400g', brand: 'Nescau', suggestedCategory: 'Mercearia', barcode: '7891000054321' },
   { name: 'Biscoito Recheado Chocolate 130g', brand: 'Trakinas', suggestedCategory: 'Mercearia' },
   { name: 'Biscoito Cream Cracker 400g', brand: 'Bauducco', suggestedCategory: 'Mercearia' },
   { name: 'Bolacha Maizena 400g', brand: 'Marilan', suggestedCategory: 'Mercearia' },
@@ -67,7 +69,7 @@ export const CATALOG_ITEMS: SeedCatalogItem[] = [
   { name: 'Mostarda 200g', brand: 'Heinz', suggestedCategory: 'Mercearia' },
 
   // ---------- Frios e Laticínios ----------
-  { name: 'Leite Integral 1L', brand: 'Italac', suggestedCategory: 'Frios e Laticínios' },
+  { name: 'Leite Integral 1L', brand: 'Italac', suggestedCategory: 'Frios e Laticínios', barcode: '7898080640017' },
   { name: 'Leite Desnatado 1L', brand: 'Piracanjuba', suggestedCategory: 'Frios e Laticínios' },
   { name: 'Manteiga com Sal 200g', brand: 'Aviação', suggestedCategory: 'Frios e Laticínios' },
   { name: 'Margarina 500g', brand: 'Qualy', suggestedCategory: 'Frios e Laticínios' },
@@ -92,8 +94,8 @@ export const CATALOG_ITEMS: SeedCatalogItem[] = [
   { name: 'Laranja Pera', suggestedCategory: 'Hortifruti', unit: 'KG' },
 
   // ---------- Limpeza ----------
-  { name: 'Detergente Líquido Neutro 500ml', brand: 'Ypê', suggestedCategory: 'Limpeza' },
-  { name: 'Sabão em Pó 1kg', brand: 'Omo', suggestedCategory: 'Limpeza' },
+  { name: 'Detergente Líquido Neutro 500ml', brand: 'Ypê', suggestedCategory: 'Limpeza', barcode: '7896098900116' },
+  { name: 'Sabão em Pó 1kg', brand: 'Omo', suggestedCategory: 'Limpeza', barcode: '7891150068216' },
   { name: 'Sabão em Barra 200g', brand: 'Ypê', suggestedCategory: 'Limpeza' },
   { name: 'Amaciante de Roupas 2L', brand: 'Comfort', suggestedCategory: 'Limpeza' },
   { name: 'Água Sanitária 2L', brand: 'Qboa', suggestedCategory: 'Limpeza' },
@@ -105,9 +107,9 @@ export const CATALOG_ITEMS: SeedCatalogItem[] = [
   { name: 'Papel Toalha 2 rolos', brand: 'Snob', suggestedCategory: 'Limpeza', unit: 'PCT' },
 
   // ---------- Higiene ----------
-  { name: 'Papel Higiênico 12 rolos', brand: 'Neve', suggestedCategory: 'Higiene', unit: 'PCT' },
+  { name: 'Papel Higiênico 12 rolos', brand: 'Neve', suggestedCategory: 'Higiene', unit: 'PCT', barcode: '7891172422018' },
   { name: 'Sabonete em Barra 85g', brand: 'Dove', suggestedCategory: 'Higiene' },
-  { name: 'Creme Dental 90g', brand: 'Colgate', suggestedCategory: 'Higiene' },
+  { name: 'Creme Dental 90g', brand: 'Colgate', suggestedCategory: 'Higiene', barcode: '7891024134985' },
   { name: 'Escova de Dente', brand: 'Oral-B', suggestedCategory: 'Higiene' },
   { name: 'Shampoo 350ml', brand: 'Seda', suggestedCategory: 'Higiene' },
   { name: 'Condicionador 350ml', brand: 'Seda', suggestedCategory: 'Higiene' },
@@ -116,7 +118,7 @@ export const CATALOG_ITEMS: SeedCatalogItem[] = [
   { name: 'Fralda Descartável M 30un', brand: 'Pampers', suggestedCategory: 'Higiene', unit: 'PCT' },
 
   // ---------- Doces e Snacks ----------
-  { name: 'Chocolate ao Leite 90g', brand: 'Lacta', suggestedCategory: 'Doces e Snacks' },
+  { name: 'Chocolate ao Leite 90g', brand: 'Lacta', suggestedCategory: 'Doces e Snacks', barcode: '7622300990879' },
   { name: 'Bombom Sortido 250g', brand: 'Garoto', suggestedCategory: 'Doces e Snacks' },
   { name: 'Salgadinho de Milho 100g', brand: 'Doritos', suggestedCategory: 'Doces e Snacks' },
   { name: 'Batata Palha 100g', brand: 'Yoki', suggestedCategory: 'Doces e Snacks' },

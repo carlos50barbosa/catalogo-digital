@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { getStoreBySlug } from '@/lib/data/stores'
+import { can } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,9 @@ export default async function PrivacyPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
   const store = await getStoreBySlug(slug)
   if (!store) notFound()
+
+  // Cláusula de fiado só aparece quando a loja realmente oferece o recurso.
+  const offersFiado = can(store.plan, 'fiado') && (store.settings?.fiadoEnabled ?? false)
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
@@ -79,6 +83,21 @@ export default async function PrivacyPage({ params }: { params: Promise<{ slug: 
             descartando-os quando não forem mais necessários.
           </p>
         </section>
+
+        {offersFiado && (
+          <section>
+            <h2 className="font-semibold text-neutral-900">6. Fiado (controle de crédito)</h2>
+            <p>
+              Caso você compre <strong>fiado</strong> (a prazo) com {store.name}, registramos os{' '}
+              <strong>valores das compras e pagamentos</strong>, o saldo devedor e as datas, para{' '}
+              <strong>controle de crédito e cobrança</strong>. Esses dados financeiros são tratados
+              com base na <strong>execução do contrato</strong> entre você e a loja e no{' '}
+              <strong>legítimo interesse</strong> de receber pelos produtos vendidos, e ficam
+              acessíveis apenas a {store.name} (não aparecem na loja online). A cobrança, quando
+              houver, é feita diretamente pela loja (por exemplo, via WhatsApp).
+            </p>
+          </section>
+        )}
       </div>
     </main>
   )

@@ -1,13 +1,16 @@
-import { Users, Phone, MapPin } from 'lucide-react'
+import Link from 'next/link'
+import { Users, Phone, MapPin, NotebookPen } from 'lucide-react'
 import { requireStore } from '@/lib/auth-helpers'
 import { listCustomers } from '@/lib/data/customers'
+import { getFiadoAccess } from '@/lib/data/fiado'
 import { formatDateTimeBR } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CustomersPage() {
   const { storeId } = await requireStore()
-  const customers = await listCustomers(storeId)
+  const [customers, fiado] = await Promise.all([listCustomers(storeId), getFiadoAccess(storeId)])
+  const fiadoOn = fiado.available
 
   return (
     <div className="space-y-5">
@@ -50,6 +53,15 @@ export default async function CustomersPage() {
                   pedido(s){c.lastOrderAt ? ` · ${formatDateTimeBR(c.lastOrderAt)}` : ''}
                 </p>
               </div>
+              {fiadoOn && (
+                <Link
+                  href={`/painel/fiado/${c.id}`}
+                  aria-label={`Fiado de ${c.name}`}
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-neutral-300 bg-white px-2.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+                >
+                  <NotebookPen className="h-4 w-4" /> Fiado
+                </Link>
+              )}
             </li>
           ))}
         </ul>

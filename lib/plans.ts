@@ -13,6 +13,8 @@ export type PlanFeatures = {
   ofertasEnabled: boolean
   customBranding: Branding
   prioritySupport: boolean
+  /** controle de fiado (caderneta digital) — disponível a partir do Profissional */
+  fiadoEnabled: boolean
   /** serviço "feito pra você" (fotos/posts) — flag de direito, não trava de software */
   managedContent: boolean
   /** valor mensal de referência (R$). O valor real cobrado vem da assinatura/gateway. */
@@ -28,6 +30,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     ofertasEnabled: false,
     customBranding: 'basic',
     prioritySupport: false,
+    fiadoEnabled: false,
     managedContent: false,
     value: 59,
     priceLabel: 'R$ 59/mês',
@@ -39,6 +42,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     ofertasEnabled: true,
     customBranding: 'full',
     prioritySupport: true,
+    fiadoEnabled: true,
     managedContent: false,
     value: 119,
     priceLabel: 'R$ 119/mês',
@@ -50,6 +54,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     ofertasEnabled: true,
     customBranding: 'full',
     prioritySupport: true,
+    fiadoEnabled: true,
     managedContent: true,
     value: 199,
     priceLabel: 'R$ 199/mês',
@@ -72,7 +77,7 @@ export function canAddProduct(plan: Plan, currentCount: number): boolean {
   return max === null || currentCount < max
 }
 
-export type Feature = 'ofertas' | 'managedContent' | 'prioritySupport' | 'customMessage'
+export type Feature = 'ofertas' | 'managedContent' | 'prioritySupport' | 'customMessage' | 'fiado'
 
 /** Check centralizado de recurso por plano. */
 export function can(plan: Plan, feature: Feature): boolean {
@@ -86,6 +91,8 @@ export function can(plan: Plan, feature: Feature): boolean {
       return f.prioritySupport
     case 'customMessage':
       return f.customBranding === 'full'
+    case 'fiado':
+      return f.fiadoEnabled
     default:
       return false
   }

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe Id="NFe35260612345678000199550010000001011000001014" versao="4.00">
+      <ide>
+        <cUF>35</cUF>
+        <natOp>VENDA</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>101</nNF>
+      </ide>
+      <emit>
+        <CNPJ>12345678000199</CNPJ>
+        <xNome>DISTRIBUIDORA BOM PRECO LTDA</xNome>
+      </emit>
+      <dest>
+        <xNome>MERCADINHO DEMO</xNome>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>FORN-001</cProd>
+          <cEAN>7894900011517</cEAN>
+          <xProd>REFRIG COCA COLA 2L PET</xProd>
+          <NCM>22021000</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>6.0000</qCom>
+          <vUnCom>5.4900000000</vUnCom>
+          <vProd>32.94</vProd>
+        </prod>
+      </det>
+      <det nItem="2">
+        <prod>
+          <cProd>FORN-002</cProd>
+          <cEAN>7891991000116</cEAN>
+          <xProd>REFRIG GUARANA ANTARCTICA 2L</xProd>
+          <NCM>22021000</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>6.0000</qCom>
+          <vUnCom>4.2000000000</vUnCom>
+          <vProd>25.20</vProd>
+        </prod>
+      </det>
+      <det nItem="3">
+        <prod>
+          <cProd>FORN-003</cProd>
+          <cEAN>7896006711524</cEAN>
+          <xProd>ARROZ TIO JOAO T1 5KG</xProd>
+          <NCM>10063021</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>FD</uCom>
+          <qCom>10.0000</qCom>
+          <vUnCom>19.9000000000</vUnCom>
+          <vProd>199.00</vProd>
+        </prod>
+      </det>
+      <det nItem="4">
+        <prod>
+          <cProd>FORN-004</cProd>
+          <cEAN>7898080640017</cEAN>
+          <xProd>LEITE INTEGRAL ITALAC 1L 998877</xProd>
+          <NCM>04012010</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>CX</uCom>
+          <qCom>12.0000</qCom>
+          <vUnCom>3.2000000000</vUnCom>
+          <vProd>38.40</vProd>
+        </prod>
+      </det>
+      <det nItem="5">
+        <prod>
+          <cProd>FORN-005</cProd>
+          <cEAN>7896089012345</cEAN>
+          <xProd>CAFE PILAO TRAD 500G VACUO</xProd>
+          <NCM>09012100</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>8.0000</qCom>
+          <vUnCom>11.5000000000</vUnCom>
+          <vProd>92.00</vProd>
+        </prod>
+      </det>
+      <det nItem="6">
+        <prod>
+          <cProd>FORN-006</cProd>
+          <cEAN>7896004400112</cEAN>
+          <xProd>BALA JUJUBA SORTIDA FINI 700G</xProd>
+          <NCM>17049020</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>PCT</uCom>
+          <qCom>5.0000</qCom>
+          <vUnCom>8.9000000000</vUnCom>
+          <vProd>44.50</vProd>
+        </prod>
+      </det>
+      <det nItem="7">
+        <prod>
+          <cProd>FORN-007</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>BISCOITO CASEIRO POLVILHO 300G</xProd>
+          <NCM>19059090</NCM>
+          <CFOP>5102</CFOP>
+          <uCom>UN</uCom>
+          <qCom>20.0000</qCom>
+          <vUnCom>4.5000000000</vUnCom>
+          <vProd>90.00</vProd>
+        </prod>
+      </det>
+    </infNFe>
+  </NFe>
+</nfeProc>

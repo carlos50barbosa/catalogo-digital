@@ -62,12 +62,22 @@ enum OrderStatus {
   GENERATED // único status no MVP: pedido gerado (não confirmado)
 }
 
+enum FiadoAccountStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum FiadoEntryType {
+  DEBIT // compra fiada — aumenta a dívida
+  CREDIT // pagamento — abate a dívida
+}
+
 // ---------- Tenant ----------
 
 /// Store é o tenant. Cada mercadinho é uma Store.
 model Store {
-  id             String   @id @default(cuid())
-  slug           String   @unique // identifica a loja na vitrine pública /{slug}
+  id             String      @id @default(cuid())
+  slug           String      @unique // identifica a loja na vitrine pública /{slug}
   name           String
   logoUrl        String?
   whatsappNumber String // formato internacional, ex.: 5582999999999
@@ -87,18 +97,21 @@ model Store {
   customers     Customer[]
   subscription  Subscription?
   billingEvents BillingEvent[]
+  nfeImports    NfeImport[]
+  fiadoAccounts FiadoAccount[]
+  fiadoEntries  FiadoEntry[]
 
   @@index([slug])
 }
 
 /// Dono/operador de uma loja. Pertence a exatamente uma Store.
 model User {
-  id                 String    @id @default(cuid())
-  storeId            String
-  email              String    @unique
-  passwordHash       String
-  name               String
-  role               Role      @default(OWNER)
+  id                   String    @id @default(cuid())
+  storeId              String
+  email                String    @unique
+  passwordHash         String
+  name                 String
+  role                 Role      @default(OWNER)
   emailVerified        DateTime? // null = não verificado
   emailVerifyToken     String?   @unique
   emailVerifyExpires   DateTime?
@@ -126,8 +139,15 @@ model StoreSettings {
   fulfillment          Fulfillment @default(DELIVERY_AND_PICKUP)
   orderMessageTemplate String?     @db.Text
   showOutOfStock       Boolean     @default(true) // mostrar produtos esgotados (true) ou ocultar (false)
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+
+  // ----- Fiado (caderneta digital) -----
+  fiadoEnabled            Boolean @default(true) // liga/desliga o fiado nesta loja (além do gating por plano)
+  fiadoDefaultTermDays    Int     @default(30) // prazo padrão do débito (dueDate = hoje + N dias)
+  fiadoDefaultCreditLimit Decimal @default(0) @db.Decimal(10, 2) // limite padrão ao criar conta (0 = sem limite)
+  fiadoReminderTemplate   String? @db.Text // texto da mensagem de cobrança (placeholders {nome} {loja} {saldo})
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 }
@@ -156,6 +176,8 @@ model Product {
   name          String
   description   String?  @db.Text
   price         Decimal  @db.Decimal(10, 2)
+  cost          Decimal? @db.Decimal(10, 2) // custo de compra (ex.: vUnCom da NF-e); != preço de venda
+  barcode       String? // GTIN/EAN — chave de match na importação por NF-e
   unit          Unit     @default(UN)
   imageUrl      String?
   isAvailable   Boolean  @default(true)
@@ -170,6 +192,7 @@ model Product {
 
   @@index([storeId, isAvailable])
   @@index([storeId, categoryId])
+  @@index([storeId, barcode]) // match por código de barras (importação NF-e)
 }
 
 // ---------- Biblioteca compartilhada (GLOBAL, sem storeId) ----------
@@ -191,6 +214,76 @@ model CatalogItem {
   @@index([name])
 }
 
+// ---------- Importação por NF-e (XML) ----------
+
+/// Log/auditoria de importações por NF-e e guarda de deduplicação.
+/// A chave de acesso (44 dígitos) é única por loja: impede reimportar a mesma nota.
+model NfeImport {
+  id           String   @id @default(cuid())
+  storeId      String
+  accessKey    String // chave de acesso da NF-e (44 dígitos)
+  supplierName String? // emit/xNome
+  supplierCnpj String? // emit/CNPJ
+  itemCount    Int // quantos itens foram efetivamente importados
+  createdAt    DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, accessKey]) // dedup: a mesma nota não entra duas vezes na loja
+  @@index([storeId])
+}
+
+// ---------- Fiado (caderneta digital — livro-razão imutável) ----------
+
+/// Conta corrente de fiado, 1-para-1 com Customer. `balance` é um CACHE
+/// denormalizado (positivo = cliente deve), atualizado SEMPRE na mesma transação
+/// do lançamento. A fonte da verdade são os FiadoEntry: balance é recalculável
+/// por soma(DEBIT) − soma(CREDIT).
+model FiadoAccount {
+  id          String             @id @default(cuid())
+  storeId     String
+  customerId  String             @unique // 1 conta por cliente (satisfaz a relação 1-1)
+  balance     Decimal            @default(0) @db.Decimal(10, 2)
+  creditLimit Decimal            @default(0) @db.Decimal(10, 2) // 0 = sem limite
+  status      FiadoAccountStatus @default(ACTIVE)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  store    Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  entries  FiadoEntry[]
+
+  @@index([storeId])
+}
+
+/// Lançamento do livro-razão — IMUTÁVEL. Nunca é editado nem excluído.
+/// Correção de erro = novo lançamento de estorno (reversesEntryId aponta o original).
+/// `createdByUserId` é referência leve (auditoria de quem lançou) — sem FK para não
+/// criar caminho duplo de cascade (Store→User e Store→FiadoEntry).
+model FiadoEntry {
+  id              String         @id @default(cuid())
+  storeId         String
+  fiadoAccountId  String
+  customerId      String // denormalizado p/ consulta direta
+  type            FiadoEntryType
+  amount          Decimal        @db.Decimal(10, 2) // sempre positivo
+  description     String?
+  orderId         String? // vincula a um pedido de origem
+  dueDate         DateTime? // vencimento (apenas p/ débitos)
+  reversesEntryId String? // se estorno, aponta o lançamento estornado
+  createdByUserId String // auditoria (id do User da sessão)
+  createdAt       DateTime       @default(now())
+
+  store        Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  fiadoAccount FiadoAccount @relation(fields: [fiadoAccountId], references: [id], onDelete: Cascade)
+  order        Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  reverses     FiadoEntry?  @relation("FiadoReversal", fields: [reversesEntryId], references: [id], onDelete: SetNull)
+  reversedBy   FiadoEntry[] @relation("FiadoReversal")
+
+  @@index([storeId, fiadoAccountId, createdAt])
+  @@index([storeId, customerId])
+}
+
 // ---------- Pedidos (order capture) ----------
 
 /// Pedido GERADO (não confirmado). No MVP o pedido é a mensagem do WhatsApp;
@@ -210,9 +303,10 @@ model Order {
   status        OrderStatus @default(GENERATED)
   createdAt     DateTime    @default(now())
 
-  store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  customer Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  items    OrderItem[]
+  store        Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items        OrderItem[]
+  fiadoEntries FiadoEntry[]
 
   @@index([storeId, createdAt])
   @@index([customerId])
@@ -247,8 +341,9 @@ model Customer {
   createdAt   DateTime  @default(now())
   lastOrderAt DateTime?
 
-  store  Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  orders Order[]
+  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders       Order[]
+  fiadoAccount FiadoAccount?
 
   @@unique([storeId, phone]) // reconhece cliente recorrente por loja
   @@index([storeId])

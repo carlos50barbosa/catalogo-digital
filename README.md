@@ -175,6 +175,72 @@ Banana Prata,Hortifruti,5.99,KG
 
 ---
 
+## Importação de produtos pela NF-e (XML)
+
+No painel: **Produtos → Importar da nota (XML)** (ou **Importar → Importar da nota fiscal**).
+O dono sobe o **XML da NF-e de compra** (a nota que o fornecedor envia por e-mail ou ele baixa
+no portal) e o sistema monta/atualiza o catálogo casando os itens **pelo código de barras (GTIN)**.
+
+- **Sem SEFAZ, sem certificado digital** — apenas leitura do XML estruturado (layout 4.00 da SEFAZ,
+  parser `fast-xml-parser` com `parseTagValue: false` para **não corromper o GTIN/CNPJ** com zeros
+  à esquerda).
+- **Match por GTIN (prioridade):** produto já existente na loja → **Atualizar** (só agrega o custo,
+  preserva nome/preço do dono); item na **biblioteca compartilhada** → **Da biblioteca** (entra com
+  nome e foto prontos); sem correspondência ou `"SEM GTIN"` → **Novo** (revisar nome).
+- **Tela de revisão** editável antes de gravar qualquer coisa: incluir/ignorar, nome, custo, preço
+  (com sugestão de margem), unidade, categoria e foto. Resumo de "X criados, Y atualizados,
+  Z ignorados" e respeito ao **limite de produtos do plano**.
+- **Custo ≠ preço de venda:** a nota traz o que você pagou (`vUnCom`). O preço é decisão do dono —
+  itens novos sem preço entram **indisponíveis** até serem precificados.
+- **Deduplicação:** a **chave de acesso** (44 dígitos) é única por loja; subir a mesma nota de novo
+  é avisado e bloqueado.
+
+> Tudo escopado por `storeId` da sessão; na confirmação o servidor revalida o payload editado
+> (zod), reconfere a posse do produto e refaz o cálculo de limite/categorias.
+
+**Para testar:** o `npm run db:seed` já popula códigos de barras (GTIN) em ~17 itens da
+biblioteca (idempotente — faz _backfill_ em bancos já populados). Há duas notas de exemplo em
+[`samples/`](samples/):
+
+- `samples/nfe-exemplo-1.xml` — itens que casam com a biblioteca (**Da biblioteca**), um item com
+  GTIN desconhecido e um `"SEM GTIN"` (ambos **Novos**).
+- `samples/nfe-exemplo-2.xml` — suba **depois** da nota 1: os itens repetidos agora existem na loja
+  (com GTIN) e caem em **Atualizar**; um item inédito cai em **Da biblioteca**. Chave de acesso
+  diferente, então não dispara a deduplicação (reenviar a _mesma_ nota, sim).
+
+---
+
+## Fiado Digital (caderneta digital)
+
+No painel: **Fiado** (disponível nos planos **Profissional** e **Premium** — no Essencial mostra
+upsell). Substitui o caderninho de fiado por uma **conta corrente por cliente**, reaproveitando a
+base de `Customer` já capturada no checkout.
+
+- **Livro-razão imutável.** Cada compra é um **débito**, cada pagamento um **crédito**
+  (`FiadoEntry`). Lançamento **nunca** é editado nem excluído — corrigir = **estorno** (lançamento
+  oposto que referencia o original via `reversesEntryId`). Auditoria com `createdByUserId`.
+- **Saldo atômico.** `FiadoAccount.balance` é um cache atualizado **na mesma transação** do
+  lançamento (increment atômico); a fonte da verdade são os lançamentos (recalculável por
+  soma(DEBIT) − soma(CREDIT)).
+- **Limite e atraso.** Limite de crédito por conta (0 = sem limite): ao exceder, **avisa e pede
+  confirmação**. Conta fica "em atraso" quando há saldo e um débito vencido (heurística pelo débito
+  mais antigo) — mostra os dias em atraso. Pagamento maior que a dívida também pede confirmação.
+- **Cobrança manual por WhatsApp.** Botão "Cobrar no WhatsApp" abre o `wa.me` do **telefone do
+  cliente** com a mensagem do saldo pronta (`lib/fiado/buildReminderMessage.ts`, placeholders
+  `{nome} {loja} {saldo}`); o dono envia do próprio número. Sem automação/agendamento no MVP.
+- **Integração com pedido.** No detalhe do pedido, "Lançar na conta (fiado)" cria um débito com o
+  total, vinculado ao cliente e ao `orderId` (com guarda anti-duplicação).
+- **Telas.** Visão geral (total a receber, nº de devedores, total em atraso, lista com busca e
+  ordenação + cobrança); ficha do cliente (saldo, limite, status, extrato imutável e ações);
+  configurações (ativar/desativar, prazo e limite padrão, template da mensagem).
+
+> O **dinheiro não passa pelo sistema** (sem Asaas/gateway aqui): o cliente paga a loja por fora
+> (PIX/dinheiro) e o dono registra o pagamento. Tudo escopado por `storeId`; o dado de fiado
+> **nunca** aparece na vitrine pública e a página de privacidade da loja ganha uma cláusula de
+> controle de crédito quando o recurso está ativo (LGPD).
+
+---
+
 ## Biblioteca compartilhada (CatalogItem)
 
 Produtos comuns de mercadinho (refrigerante, água, arroz, gás...) são cadastrados **uma vez**

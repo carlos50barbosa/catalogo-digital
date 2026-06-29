@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Truck, Package, MapPin, CreditCard, Phone, User } from 'lucide-react'
 import { requireStore } from '@/lib/auth-helpers'
 import { getOrder } from '@/lib/data/orders'
+import { getFiadoAccess, getFiadoEntryByOrder } from '@/lib/data/fiado'
 import { Badge } from '@/components/ui/badge'
+import { LaunchOrderFiadoButton } from '@/components/admin/LaunchOrderFiadoButton'
 import {
   formatBRL,
   decimalToNumber,
@@ -20,6 +22,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   if (!order) notFound()
 
   const isDelivery = order.fulfillment === 'DELIVERY'
+
+  // Fiado: oferece "lançar na conta" quando o recurso está disponível.
+  const fiado = await getFiadoAccess(storeId)
+  const fiadoLaunched = fiado.available ? !!(await getFiadoEntryByOrder(storeId, id)) : false
 
   return (
     <div className="space-y-5">
@@ -100,6 +106,22 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </div>
         </div>
       </div>
+
+      {/* Fiado: lançar o total do pedido na conta do cliente */}
+      {fiado.available && (
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+          <p className="mb-1 text-sm font-medium text-neutral-700">Fiado</p>
+          <p className="mb-3 text-xs text-neutral-500">
+            Registre este pedido na caderneta do cliente como uma compra fiada (débito de{' '}
+            {formatBRL(decimalToNumber(order.total))}).
+          </p>
+          <LaunchOrderFiadoButton
+            orderId={order.id}
+            customerId={order.customerId}
+            alreadyLaunched={fiadoLaunched}
+          />
+        </div>
+      )}
     </div>
   )
 }

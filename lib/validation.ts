@@ -114,6 +114,75 @@ export const csvRowSchema = z.object({
   unidade: unitEnum.default('UN'),
 })
 
+// Importação por NF-e: payload de CONFIRMAÇÃO (vem editado do cliente — revalidar tudo).
+// cost/price NÃO usam coerce (null = "sem preço" deve ser preservado, não virar 0).
+const nfeStatusEnum = z.enum(['UPDATE', 'LIBRARY', 'NEW'])
+
+export const nfeConfirmItemSchema = z.object({
+  status: nfeStatusEnum,
+  include: z.boolean(),
+  name: z.string().min(1, 'Informe o nome do produto').max(120),
+  barcode: z.string().max(20).nullable().optional(),
+  cost: z.number().finite().nonnegative().nullable().optional(),
+  price: z.number().finite().nonnegative().nullable().optional(),
+  unit: unitEnum,
+  category: z.string().max(80).nullable().optional(),
+  productId: z.string().min(1).nullable().optional(), // status UPDATE
+  catalogItemId: z.string().min(1).nullable().optional(), // status LIBRARY
+  updateName: z.boolean().optional(), // UPDATE: dono editou o nome na revisão?
+  updatePrice: z.boolean().optional(), // UPDATE: dono editou o preço na revisão?
+})
+
+export const nfeConfirmSchema = z.object({
+  accessKey: z.string().regex(/^\d{44}$/, 'Chave de acesso inválida'),
+  supplierName: z.string().max(160).nullable().optional(),
+  supplierCnpj: z.string().max(20).nullable().optional(),
+  items: z.array(nfeConfirmItemSchema).min(1).max(500),
+})
+
+export type NfeConfirmInput = z.infer<typeof nfeConfirmSchema>
+export type NfeConfirmItemInput = z.infer<typeof nfeConfirmItemSchema>
+
+// ---------- Fiado (caderneta digital) ----------
+// Valores monetários sempre positivos. O payload vem do cliente — revalidar tudo no servidor.
+
+const fiadoAmount = z.coerce
+  .number()
+  .positive('Informe um valor maior que zero')
+  .max(1_000_000, 'Valor muito alto')
+
+/** Lançar compra (DEBIT). */
+export const fiadoDebitSchema = z.object({
+  customerId: z.string().min(1),
+  amount: fiadoAmount,
+  description: z.string().max(200).optional().nullable(),
+  dueDate: z.string().max(40).optional().nullable(), // ISO/yyyy-mm-dd; default no servidor
+  orderId: z.string().min(1).optional().nullable(),
+  confirm: z.boolean().optional(), // confirma estouro de limite
+})
+
+/** Registrar pagamento (CREDIT). */
+export const fiadoPaymentSchema = z.object({
+  customerId: z.string().min(1),
+  amount: fiadoAmount,
+  description: z.string().max(200).optional().nullable(),
+  confirm: z.boolean().optional(), // confirma pagamento maior que a dívida
+})
+
+/** Editar limite de crédito da conta. */
+export const fiadoAccountSchema = z.object({
+  customerId: z.string().min(1),
+  creditLimit: z.coerce.number().nonnegative('Limite inválido').max(1_000_000),
+})
+
+/** Configurações de fiado da loja. */
+export const fiadoSettingsSchema = z.object({
+  fiadoEnabled: z.boolean().optional(),
+  fiadoDefaultTermDays: z.coerce.number().int().min(0).max(365).default(30),
+  fiadoDefaultCreditLimit: z.coerce.number().nonnegative().max(1_000_000).default(0),
+  fiadoReminderTemplate: z.string().max(1000).optional().nullable(),
+})
+
 export type ProductInput = z.infer<typeof productSchema>
 export type SettingsInput = z.infer<typeof settingsSchema>
 export type CategoryInput = z.infer<typeof categorySchema>

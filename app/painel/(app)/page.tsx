@@ -10,6 +10,7 @@ import {
   QrCode,
   TrendingUp,
   Receipt,
+  NotebookPen,
 } from 'lucide-react'
 import { requireStore } from '@/lib/auth-helpers'
 import { getStoreForPanel, countProducts } from '@/lib/data/stores'
@@ -25,9 +26,10 @@ const SHORTCUTS = [
   { href: '/painel/pedidos', label: 'Pedidos', desc: 'Veja os pedidos gerados', icon: ShoppingBag },
   { href: '/painel/produtos', label: 'Produtos', desc: 'Cadastre e edite', icon: Package },
   { href: '/painel/clientes', label: 'Clientes', desc: 'Sua base de clientes', icon: Users },
+  { href: '/painel/fiado', label: 'Fiado', desc: 'Caderneta digital', icon: NotebookPen },
   { href: '/painel/categorias', label: 'Categorias', desc: 'Organize o catálogo', icon: Tags },
   { href: '/painel/divulgacao', label: 'Divulgação', desc: 'QR Code da loja', icon: QrCode },
-  { href: '/painel/importar', label: 'Importar CSV', desc: 'Vários de uma vez', icon: Upload },
+  { href: '/painel/importar', label: 'Importar XML/CSV', desc: 'Nota fiscal ou planilha', icon: Upload },
   { href: '/painel/configuracoes', label: 'Configurações', desc: 'Loja, entrega, PIX', icon: Settings },
 ]
 

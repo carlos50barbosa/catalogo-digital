@@ -14,3 +14,8 @@ export function listCustomers(storeId: string) {
 export function countCustomers(storeId: string) {
   return prisma.customer.count({ where: { storeId } })
 }
+
+/** Busca um cliente garantindo que pertence à loja. */
+export function getCustomer(storeId: string, id: string) {
+  return prisma.customer.findFirst({ where: { id, storeId } })
+}
