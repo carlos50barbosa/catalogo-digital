@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Store } from 'lucide-react'
 import { auth } from '@/auth'
@@ -42,6 +43,13 @@ export default async function LoginPage({
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
           <LoginForm />
         </div>
+
+        <p className="mt-6 text-center text-sm text-neutral-500">
+          Ainda não tem uma loja?{' '}
+          <Link href="/cadastro" className="font-medium text-accent underline">
+            Cadastre a sua
+          </Link>
+        </p>
       </div>
     </main>
   )
