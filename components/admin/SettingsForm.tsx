@@ -1,9 +1,10 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import Image from 'next/image'
-import { AlertCircle, CheckCircle2, ImagePlus, Store as StoreIcon } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ImagePlus, Store as StoreIcon, Loader2 } from 'lucide-react'
 import { updateSettingsAction } from '@/app/painel/_actions/settings'
+import { processSquareImage } from '@/lib/image-client'
 import { initialActionState } from '@/lib/action-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,14 +40,43 @@ export function SettingsForm({
 }) {
   const [state, formAction, pending] = useActionState(updateSettingsAction, initialActionState)
 
-  const [logoUrl, setLogoUrl] = useState(initial.logoUrl ?? '')
+  const [logoUrl] = useState(initial.logoUrl ?? '')
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [logoProcessing, setLogoProcessing] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
   const [accent, setAccent] = useState(initial.accentColor ?? '#16a34a')
   const [closed, setClosed] = useState<Record<number, boolean>>(() => {
     const m: Record<number, boolean> = {}
     for (let d = 0; d < 7; d++) m[d] = !initial.openingHours?.[String(d)]
     return m
   })
+
+  // Logo: ajusta em quadrado (contain, preserva transparência em webp) + comprime.
+  async function handleLogo(file: File | undefined) {
+    if (!file) return
+    setLogoProcessing(true)
+    try {
+      const finalFile = await processSquareImage(file, { size: 512, mode: 'contain', type: 'image/webp' })
+      if (logoInputRef.current) {
+        const dt = new DataTransfer()
+        dt.items.add(finalFile)
+        logoInputRef.current.files = dt.files
+      }
+      setLogoPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(finalFile)
+      })
+    } catch {
+      if (logoInputRef.current) {
+        const dt = new DataTransfer()
+        dt.items.add(file)
+        logoInputRef.current.files = dt.files
+      }
+      setLogoPreview(URL.createObjectURL(file))
+    } finally {
+      setLogoProcessing(false)
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-5">
@@ -83,21 +113,27 @@ export function SettingsForm({
                   </div>
                 )}
               </div>
-              <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-                <ImagePlus className="h-4 w-4" />
-                Enviar logo
-                <input
-                  type="file"
-                  name="logo"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    setLogoPreview(f ? URL.createObjectURL(f) : null)
-                  }}
-                />
-              </label>
+              <div className="flex flex-col gap-1.5">
+                <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+                  <ImagePlus className="h-4 w-4" />
+                  Enviar logo
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => handleLogo(e.target.files?.[0])}
+                  />
+                </label>
+                {logoProcessing && (
+                  <span className="flex items-center gap-1 text-xs text-neutral-400">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Otimizando...
+                  </span>
+                )}
+                <span className="text-xs text-neutral-400">Quadrado, fica em ~512px (webp).</span>
+              </div>
             </div>
+            {/* input REAL enviado no FormData (recebe o logo já processado) */}
+            <input type="file" name="logo" ref={logoInputRef} accept="image/webp" className="hidden" tabIndex={-1} />
           </div>
 
           <div>

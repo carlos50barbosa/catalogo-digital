@@ -8,6 +8,7 @@ import { createProductAction, updateProductAction } from '@/app/painel/_actions/
 import { initialActionState } from '@/lib/action-state'
 import { CatalogPicker } from './CatalogPicker'
 import { ProductImage } from '@/components/ui/product-image'
+import { processSquareImage } from '@/lib/image-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -55,21 +56,16 @@ export function ProductForm({
   const [compressing, setCompressing] = useState(false)
   const realInputRef = useRef<HTMLInputElement>(null)
 
-  // Comprime/redimensiona no cliente antes do upload (storage é o disco da VPS).
+  // Recorta em quadrado + comprime no cliente antes do upload (storage = disco da VPS).
   async function handleFile(file: File | undefined) {
     if (!file) return
     setCompressing(true)
     try {
-      const imageCompression = (await import('browser-image-compression')).default
-      const compressed = await imageCompression(file, {
-        maxWidthOrHeight: 1200,
-        maxSizeMB: 1,
-        useWebWorker: true,
-        fileType: 'image/jpeg',
-        initialQuality: 0.8,
+      const finalFile = await processSquareImage(file, {
+        size: 1000,
+        mode: 'cover', // foto de produto: recorta o centro em quadrado
+        type: 'image/jpeg',
       })
-      const base = (file.name.replace(/\.[^.]+$/, '') || 'foto').slice(0, 40)
-      const finalFile = new File([compressed], `${base}.jpg`, { type: 'image/jpeg' })
       if (realInputRef.current) {
         const dt = new DataTransfer()
         dt.items.add(finalFile)
@@ -80,7 +76,7 @@ export function ProductForm({
         return URL.createObjectURL(finalFile)
       })
     } catch {
-      // se a compressão falhar, envia o original
+      // se o processamento falhar, envia o original
       if (realInputRef.current) {
         const dt = new DataTransfer()
         dt.items.add(file)
