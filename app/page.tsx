@@ -9,9 +9,17 @@ import {
   QrCode,
 } from 'lucide-react'
 
-// Página raiz institucional. Apresenta as principais funcionalidades do SaaS.
+// Página raiz / landing pública. Apresenta as principais funcionalidades do SaaS.
 export const metadata = {
-  robots: { index: false },
+  title: 'Catálogo Digital — Vitrine e pedidos por WhatsApp para mercadinhos',
+  description:
+    'Monte a vitrine digital do seu mercadinho e venda pelo WhatsApp, sem comissão de marketplace. Importe produtos pela nota fiscal, controle o fiado e divulgue com QR Code.',
+  openGraph: {
+    title: 'Catálogo Digital — Vitrine e pedidos por WhatsApp',
+    description:
+      'Vitrine digital + pedidos por WhatsApp para mercadinhos de bairro, sem comissão de marketplace.',
+    type: 'website',
+  },
 }
 
 const FEATURES = [
