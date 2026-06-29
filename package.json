@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "create-store": "tsx scripts/create-store.ts"
+    "create-store": "tsx scripts/create-store.ts",
+    "asaas:test": "node --env-file=.env --import tsx scripts/asaas-sandbox-test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
