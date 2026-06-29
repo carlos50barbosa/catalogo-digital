@@ -235,7 +235,7 @@ imagens estáticas voltam 404 em produção).
 
 ### 3. PM2
 
-Ajuste o `cwd` em `ecosystem.config.js` e:
+Ajuste o `cwd` (e `PORT`/`HOSTNAME` se quiser) em `ecosystem.config.js` e:
 
 ```bash
 npm i -g pm2
@@ -244,7 +244,12 @@ pm2 save
 pm2 startup     # habilita o boot automático
 ```
 
-O servidor escuta em `127.0.0.1:3000` (definido no `ecosystem.config.js`).
+O servidor escuta em `127.0.0.1:3005` (definido no `ecosystem.config.js`; o Nginx faz o proxy).
+
+> ⚠️ **Importante:** o servidor **standalone do Next NÃO carrega o `.env` sozinho**. O
+> `ecosystem.config.js` resolve isso com `node_args: '--env-file=.env'` — sem essa flag, o app
+> sobe sem `DATABASE_URL`, `NEXTAUTH_SECRET`, `ASAAS_*`, `EMAIL_*`. Vantagem extra: o `.env` é lido
+> **literalmente**, então a `ASAAS_API_KEY` (que começa com `$`) não precisa ser escapada.
 
 ### 4. Nginx (proxy reverso + arquivos de upload)
 
@@ -339,6 +344,7 @@ O `postbuild` cuida da cópia de `static`/`public`.
 - **Divulgação:** gerador de **QR Code** da loja (cartaz para imprimir / baixar PNG).
 - **Foto via câmera** do celular no painel, com **compressão no cliente** antes do upload.
 - **Confirmação pós-checkout** com instrução de apertar enviar e botão de reabrir o WhatsApp.
+- **Recuperação de senha** no login (`/painel/recuperar-senha` → e-mail com link → `/painel/redefinir-senha`).
 
 ## Planos, limites e assinatura (Asaas)
 

@@ -3,8 +3,11 @@
 //
 // O servidor standalone (gerado por `next build` com output: 'standalone')
 // fica em .next/standalone/server.js e respeita PORT e HOSTNAME.
-// As demais variáveis (DATABASE_URL, NEXTAUTH_SECRET, etc.) são lidas do
-// arquivo .env na raiz do projeto (carregado automaticamente pelo Next).
+//
+// IMPORTANTE: o servidor standalone do Next NÃO carrega o .env sozinho.
+// Por isso usamos `node_args: '--env-file=.env'` — o Node carrega o .env da raiz
+// do projeto (DATABASE_URL, NEXTAUTH_SECRET, ASAAS_*, EMAIL_*, etc.) de forma
+// literal (chaves com '$', como a do Asaas, não precisam ser escapadas).
 
 module.exports = {
   apps: [
@@ -13,13 +16,14 @@ module.exports = {
       // Ajuste o cwd para o diretório onde você fez o deploy:
       cwd: '/var/www/catalogo-digital',
       script: '.next/standalone/server.js',
+      node_args: '--env-file=.env',
       instances: 1,
       exec_mode: 'fork',
       max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
         // Next escuta nesta porta/host; o Nginx faz proxy reverso para cá.
-        PORT: 3000,
+        PORT: 3005,
         HOSTNAME: '127.0.0.1',
       },
     },
