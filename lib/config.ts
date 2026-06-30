@@ -50,7 +50,13 @@ export const config = {
 
   /** Asaas (Parte B). Chaves só via env. */
   asaas: {
-    apiKey: process.env.ASAAS_API_KEY ?? '',
+    // A chave do Asaas começa com '$' (ex.: $aact_...). No .env ela é escrita
+    // escapada como "\$aact_..." por causa do `next dev`/`next start`: o
+    // @next/env roda dotenv-expand e, sem a barra, trataria "$aact_..." como
+    // expansão de variável inexistente → string vazia. Em produção o PM2 usa
+    // `node --env-file`, que NÃO interpreta o escape e mantém a barra; por isso
+    // removemos aqui um "\$" inicial. Sobre valor cru ("$aact_...") é no-op.
+    apiKey: (process.env.ASAAS_API_KEY ?? '').replace(/^\\\$/, '$'),
     webhookToken: process.env.ASAAS_WEBHOOK_TOKEN ?? '',
     env: (process.env.ASAAS_ENV ?? 'sandbox') as 'sandbox' | 'production',
     baseUrl:
