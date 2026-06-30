@@ -39,7 +39,7 @@ export const settingsSchema = z.object({
     .string()
     .min(10, 'WhatsApp incompleto')
     .max(20)
-    .regex(/^\d+$/, 'Use apenas números, com DDI e DDD (ex.: 5582999999999)'),
+    .regex(/^\d+$/, 'Use apenas números, com 55 e DDD (ex.: 5582999999999)'),
   accentColor: z
     .string()
     .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida')
@@ -66,8 +66,16 @@ export const passwordResetRequestSchema = z.object({
   email: z.string().email('E-mail inválido'),
 })
 
+// Senha forte: mínimo 8 caracteres, com pelo menos uma letra e um número.
+const passwordRule = z
+  .string()
+  .min(8, 'A senha deve ter pelo menos 8 caracteres')
+  .max(100)
+  .regex(/[A-Za-z]/, 'A senha precisa ter pelo menos uma letra')
+  .regex(/\d/, 'A senha precisa ter pelo menos um número')
+
 export const passwordResetSchema = z.object({
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres').max(100),
+  password: passwordRule,
 })
 
 export const signupSchema = z.object({
@@ -77,9 +85,9 @@ export const signupSchema = z.object({
     .string()
     .min(10, 'WhatsApp incompleto')
     .max(20)
-    .regex(/^\d+$/, 'Use apenas números, com DDD (ex.: 5582999999999)'),
+    .regex(/^\d+$/, 'Use apenas números, com 55 e DDD (ex.: 5582999999999)'),
   email: z.string().email('E-mail inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres').max(100),
+  password: passwordRule,
   slug: z.string().max(60).optional(),
 })
 

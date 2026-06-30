@@ -145,7 +145,7 @@ export function SettingsForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="whatsappNumber">WhatsApp (com DDI e DDD)</Label>
+              <Label htmlFor="whatsappNumber">WhatsApp (com 55 e DDD)</Label>
               <Input
                 id="whatsappNumber"
                 name="whatsappNumber"

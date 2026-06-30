@@ -40,7 +40,7 @@ Argumentos:
   --name       Nome da loja (obrigatório)
   --whatsapp   Número com DDI+DDD, só dígitos, ex.: 5582999999999 (obrigatório)
   --email      E-mail de login do dono (obrigatório)
-  --password   Senha do dono, mín. 6 caracteres (obrigatório)
+  --password   Senha do dono, mín. 8 caracteres com letra e número (obrigatório)
   --slug       Identificador na URL /{slug} (opcional; derivado do nome)
   --accent     Cor de destaque hex, ex.: #16a34a (opcional)
 `)
@@ -60,7 +60,9 @@ async function main() {
   if (!name) usage('Informe --name.')
   if (!whatsapp || whatsapp.length < 10) usage('Informe --whatsapp válido (só dígitos, com DDI+DDD).')
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) usage('Informe --email válido.')
-  if (!password || password.length < 6) usage('Informe --password com pelo menos 6 caracteres.')
+  if (!password || password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    usage('Informe --password com pelo menos 8 caracteres, incluindo letra e número.')
+  }
   if (!slug) usage('Não foi possível derivar o slug — informe --slug.')
   if (accent && !/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(accent)) usage('--accent deve ser hex, ex.: #16a34a')
 

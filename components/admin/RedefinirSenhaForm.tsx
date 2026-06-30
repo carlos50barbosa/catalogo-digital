@@ -27,7 +27,7 @@ export function RedefinirSenhaForm({ token }: { token: string }) {
           type="password"
           autoComplete="new-password"
           required
-          placeholder="mínimo 6 caracteres"
+          placeholder="mín. 8 caracteres, com letra e número"
         />
         <FieldError message={state.fieldErrors?.password} />
       </div>

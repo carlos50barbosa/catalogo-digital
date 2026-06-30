@@ -66,14 +66,15 @@ export function CadastroForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
+          <Label htmlFor="whatsapp">WhatsApp (com 55 e DDD)</Label>
           <Input
             id="whatsapp"
             name="whatsapp"
             inputMode="numeric"
             required
-            placeholder="5582999999999"
+            placeholder="5582988887777"
           />
+          <p className="mt-1 text-xs text-neutral-400">Comece com o 55 do Brasil. Ex.: 5582988887777</p>
           <FieldError message={state.fieldErrors?.whatsapp} />
         </div>
         <div>
@@ -91,7 +92,7 @@ export function CadastroForm() {
           type="password"
           autoComplete="new-password"
           required
-          placeholder="mínimo 6 caracteres"
+          placeholder="mín. 8 caracteres, com letra e número"
         />
         <FieldError message={state.fieldErrors?.password} />
       </div>
