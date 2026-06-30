@@ -61,28 +61,12 @@ export async function provisionSubscription(opts: {
       externalReference: store.id,
     })
 
-    // URL do checkout hospedado: taxa de montagem (paga agora) ou a 1ª cobrança da assinatura.
+    // URL do checkout hospedado: a 1ª cobrança da assinatura.
     let checkoutUrl: string | null = null
-    if (config.setupFee > 0) {
-      try {
-        const charge = await gateway.createOneOffCharge({
-          customerId: customer.id,
-          billingType: opts.billingType,
-          value: config.setupFee,
-          dueDate: ymd(new Date()),
-          description: `Taxa de montagem — ${store.name}`,
-        })
-        checkoutUrl = charge.invoiceUrl ?? null
-      } catch {
-        // taxa de montagem é secundária
-      }
-    }
-    if (!checkoutUrl) {
-      try {
-        checkoutUrl = await gateway.getSubscriptionPaymentUrl(sub.id)
-      } catch {
-        checkoutUrl = null
-      }
+    try {
+      checkoutUrl = await gateway.getSubscriptionPaymentUrl(sub.id)
+    } catch {
+      checkoutUrl = null
     }
 
     await setStorePlan(opts.storeId, opts.plan)

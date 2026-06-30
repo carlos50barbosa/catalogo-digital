@@ -63,13 +63,13 @@ async function main() {
   console.log('\n=== 3) URL de pagamento da 1ª cobrança (checkout hospedado) ===')
   console.log('invoiceUrl:', await gateway.getSubscriptionPaymentUrl(sub.id))
 
-  console.log('\n=== 4) Cobrança avulsa da taxa de montagem (R$', config.setupFee, ') ===')
+  console.log('\n=== 4) Cobrança avulsa (primitivo do gateway, R$ 25 de teste) ===')
   const charge = await gateway.createOneOffCharge({
     customerId: customer.id,
     billingType: 'BOLETO',
-    value: config.setupFee,
+    value: 25,
     dueDate: ymd(new Date()),
-    description: 'Taxa de montagem — TESTE SANDBOX',
+    description: 'Cobrança avulsa — TESTE SANDBOX',
   })
   console.log('chargeId:', charge.id, '| invoiceUrl:', charge.invoiceUrl)
 

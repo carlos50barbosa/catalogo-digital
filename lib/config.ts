@@ -24,10 +24,7 @@ export const config = {
   defaultAccentColor: '#16a34a',
 
   /** WhatsApp de vendas (para CTAs de upgrade/regularização no painel). */
-  salesWhatsapp: process.env.SALES_WHATSAPP ?? '5582999999999',
-
-  /** Taxa única de montagem (referência exibível). */
-  setupFee: Number(process.env.SETUP_FEE ?? '250') || 250,
+  salesWhatsapp: process.env.SALES_WHATSAPP ?? '5511915155349',
 
   /** Fluxo self-service. */
   signup: {

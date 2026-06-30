@@ -46,7 +46,7 @@ export interface BillingGateway {
   /** URL da página de pagamento hospedada da 1ª cobrança da assinatura (para redirect). */
   getSubscriptionPaymentUrl(subscriptionId: string): Promise<string | null>
 
-  /** Cobrança avulsa única (ex.: taxa de montagem). */
+  /** Cobrança avulsa única, fora da assinatura recorrente. */
   createOneOffCharge(input: {
     customerId: string
     billingType: BillingType

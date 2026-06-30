@@ -54,8 +54,8 @@ export async function changePlanAction(storeId: string, plan: string) {
 
 /**
  * Cria a assinatura da loja.
- * - Com ASAAS_API_KEY: cria cliente + assinatura recorrente + cobrança avulsa da taxa
- *   de montagem no Asaas, e guarda os IDs do gateway.
+ * - Com ASAAS_API_KEY: cria cliente + assinatura recorrente no Asaas, e guarda
+ *   os IDs do gateway.
  * - Sem chave (dev/semi-manual): cria a assinatura só localmente (status PENDING).
  */
 export async function createSubscriptionAction(

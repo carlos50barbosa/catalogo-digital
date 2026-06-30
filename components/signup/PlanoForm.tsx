@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label, FieldError } from '@/components/ui/label'
 import { formatBRL } from '@/lib/format'
-import { config } from '@/lib/config'
 import { cn } from '@/lib/utils'
 
 const BILLING = [
@@ -18,7 +17,7 @@ const BILLING = [
   { value: 'CREDIT_CARD', label: 'Cartão' },
 ] as const
 
-export function PlanoForm({ setupFee }: { setupFee: number }) {
+export function PlanoForm() {
   const [state, formAction, pending] = useActionState(choosePlanAction, initialActionState)
   const [plan, setPlan] = useState<string>('PROFISSIONAL')
   const [billing, setBilling] = useState<string>('PIX')
@@ -125,12 +124,6 @@ export function PlanoForm({ setupFee }: { setupFee: number }) {
         <FieldError message={state.fieldErrors?.cpfCnpj} />
         <p className="mt-1 text-xs text-neutral-400">Necessário para emitir a cobrança no Asaas.</p>
       </div>
-
-      {setupFee > 0 && (
-        <p className="rounded-xl bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
-          + taxa única de montagem de <strong>{formatBRL(setupFee)}</strong> (cobrada uma vez).
-        </p>
-      )}
 
       <Button type="submit" loading={pending} size="lg" className="w-full">
         <CreditCard className="h-5 w-5" /> Ir para o pagamento

@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { PlanoForm } from '@/components/signup/PlanoForm'
-import { config } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +31,7 @@ export default async function PlanoPage() {
           </p>
         </div>
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
-          <PlanoForm setupFee={config.setupFee} />
+          <PlanoForm />
         </div>
       </div>
     </main>

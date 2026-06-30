@@ -171,9 +171,6 @@ export default async function AssinaturaPage() {
             )
           })}
         </div>
-        <p className="mt-3 text-xs text-neutral-400">
-          + taxa única de montagem (a partir de {formatBRL(config.setupFee)}).
-        </p>
       </div>
     </div>
   )
