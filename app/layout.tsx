@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import { config } from '@/lib/config'
 import './globals.css'
 
 const inter = Inter({
@@ -15,6 +16,9 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
+  // Base para resolver URLs relativas de OG/Twitter (em produção = domínio da loja).
+  // Sem isto, o Next usa http://localhost:<porta> e as imagens de compartilhamento saem erradas.
+  metadataBase: new URL(config.appUrl),
   title: 'Catálogo Digital',
   description: 'Vitrine digital e pedidos por WhatsApp para mercadinhos de bairro.',
 }
