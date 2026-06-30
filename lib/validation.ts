@@ -39,7 +39,7 @@ export const settingsSchema = z.object({
     .string()
     .min(10, 'WhatsApp incompleto')
     .max(20)
-    .regex(/^\d+$/, 'Use apenas números, com 55 e DDD (ex.: 5582999999999)'),
+    .regex(/^\d+$/, 'Informe o WhatsApp com DDD (só números, ex.: 82988887777)'),
   accentColor: z
     .string()
     .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida')
@@ -85,7 +85,7 @@ export const signupSchema = z.object({
     .string()
     .min(10, 'WhatsApp incompleto')
     .max(20)
-    .regex(/^\d+$/, 'Use apenas números, com 55 e DDD (ex.: 5582999999999)'),
+    .regex(/^\d+$/, 'Informe o WhatsApp com DDD (só números, ex.: 82988887777)'),
   email: z.string().email('E-mail inválido'),
   password: passwordRule,
   slug: z.string().max(60).optional(),

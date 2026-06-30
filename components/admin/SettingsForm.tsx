@@ -145,15 +145,18 @@ export function SettingsForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="whatsappNumber">WhatsApp (com 55 e DDD)</Label>
+              <Label htmlFor="whatsappNumber">WhatsApp (com DDD)</Label>
               <Input
                 id="whatsappNumber"
                 name="whatsappNumber"
                 defaultValue={initial.whatsappNumber}
-                placeholder="5582999999999"
+                placeholder="82988887777"
                 inputMode="numeric"
                 required
               />
+              <p className="mt-1 text-xs text-neutral-400">
+                Só o DDD e o número — o 55 do Brasil entra automático.
+              </p>
               <FieldError message={state.fieldErrors?.whatsappNumber} />
             </div>
             <div>

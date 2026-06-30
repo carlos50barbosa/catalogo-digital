@@ -35,3 +35,26 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
+
+/**
+ * Normaliza um WhatsApp brasileiro para o formato internacional (55 + DDD + número),
+ * que é o que o `wa.me` exige. O lojista digita só o DDD + número; o 55 entra aqui.
+ * Robusto: se vier com o 55 (por hábito), não duplica.
+ */
+export function normalizeBrWhatsapp(raw: string | null | undefined): string {
+  const d = (raw ?? '').replace(/\D/g, '')
+  if (!d) return ''
+  // Já tem o DDI 55 (12 = fixo, 13 = celular).
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) return d
+  // Só DDD + número (10 = fixo, 11 = celular) → adiciona o 55.
+  if (d.length === 10 || d.length === 11) return '55' + d
+  // Outros tamanhos: devolve só os dígitos (a validação decide se é válido).
+  return d
+}
+
+/** Inverso do anterior, para EXIBIR no formulário: remove o 55 do início (DDD + número). */
+export function stripBrDdi(num: string | null | undefined): string {
+  const d = (num ?? '').replace(/\D/g, '')
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) return d.slice(2)
+  return d
+}

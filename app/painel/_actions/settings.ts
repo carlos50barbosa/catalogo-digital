@@ -6,6 +6,7 @@ import { updateStoreProfile, upsertStoreSettings, getStoreForPanel } from '@/lib
 import { can } from '@/lib/plans'
 import { settingsSchema, fieldErrors } from '@/lib/validation'
 import { saveImage, hasUpload } from '@/lib/upload'
+import { normalizeBrWhatsapp } from '@/lib/utils'
 import { emptyToNull, type ActionState } from '@/lib/action-state'
 
 function parseZones(raw: string): string[] {
@@ -34,7 +35,7 @@ export async function updateSettingsAction(
 
   const obj = {
     name: String(formData.get('name') ?? '').trim(),
-    whatsappNumber: String(formData.get('whatsappNumber') ?? '').replace(/\D/g, ''),
+    whatsappNumber: normalizeBrWhatsapp(String(formData.get('whatsappNumber') ?? '')),
     accentColor: String(formData.get('accentColor') ?? '').trim(),
     address: emptyToNull(formData.get('address')),
     deliveryFee: formData.get('deliveryFee'),

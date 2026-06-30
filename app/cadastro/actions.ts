@@ -14,7 +14,7 @@ import {
 import { sendVerificationEmail } from '@/lib/email'
 import { rateLimit } from '@/lib/rate-limit'
 import { config } from '@/lib/config'
-import { slugify } from '@/lib/utils'
+import { slugify, normalizeBrWhatsapp } from '@/lib/utils'
 import type { ActionState } from '@/lib/action-state'
 
 export async function signupAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -28,7 +28,7 @@ export async function signupAction(_prev: ActionState, formData: FormData): Prom
   const obj = {
     ownerName: String(formData.get('ownerName') ?? '').trim(),
     storeName: String(formData.get('storeName') ?? '').trim(),
-    whatsapp: String(formData.get('whatsapp') ?? '').replace(/\D/g, ''),
+    whatsapp: normalizeBrWhatsapp(String(formData.get('whatsapp') ?? '')),
     email: String(formData.get('email') ?? '').trim(),
     password: String(formData.get('password') ?? ''),
     slug: String(formData.get('slug') ?? '').trim() || undefined,

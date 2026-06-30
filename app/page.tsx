@@ -124,7 +124,14 @@ export default function HomePage() {
       <footer className="border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-6 text-center text-sm text-neutral-500">
           © {year} Catálogo Digital · Desenvolvido por{' '}
-          <span className="font-medium text-neutral-700">Serviços Tech</span>
+          <a
+            href="https://servicostech.com.br/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900"
+          >
+            Serviços Tech
+          </a>
         </div>
       </footer>
     </div>

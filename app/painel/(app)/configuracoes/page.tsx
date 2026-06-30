@@ -2,6 +2,7 @@ import { requireStore } from '@/lib/auth-helpers'
 import { getStoreForPanel } from '@/lib/data/stores'
 import { serializeSettings } from '@/lib/serialize'
 import { can } from '@/lib/plans'
+import { stripBrDdi } from '@/lib/utils'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 
 export const dynamic = 'force-dynamic'
@@ -23,7 +24,7 @@ export default async function SettingsPage() {
         initial={{
           name: store?.name ?? '',
           logoUrl: store?.logoUrl ?? null,
-          whatsappNumber: store?.whatsappNumber ?? '',
+          whatsappNumber: stripBrDdi(store?.whatsappNumber ?? ''),
           accentColor: store?.accentColor ?? null,
           address: settings.address,
           deliveryFee: settings.deliveryFee,
