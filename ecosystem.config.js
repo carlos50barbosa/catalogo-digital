@@ -1,21 +1,24 @@
-// Configuração do PM2 para rodar o app em produção numa VPS.
+// Configuração do PM2 para rodar o app em produção numa VPS (DEPLOY ATÔMICO).
 // Uso:  pm2 start ecosystem.config.js  &&  pm2 save
 //
-// O servidor standalone (gerado por `next build` com output: 'standalone')
-// fica em .next/standalone/server.js e respeita PORT e HOSTNAME.
+// O `script` aponta para o symlink `current` (gerenciado pelo deploy.sh), que
+// aponta para a RELEASE ativa. Isso permite trocar de versão sem o processo
+// antigo tropeçar em chunks que o `next build` regeneraria por baixo dele.
 //
-// IMPORTANTE: o servidor standalone do Next NÃO carrega o .env sozinho.
-// Por isso usamos `node_args: '--env-file=.env'` — o Node carrega o .env da raiz
-// do projeto (DATABASE_URL, NEXTAUTH_SECRET, ASAAS_*, EMAIL_*, etc.) de forma
-// literal (chaves com '$', como a do Asaas, não precisam ser escapadas).
+// `cwd` continua na raiz do projeto SÓ para o Node resolver `--env-file=.env`
+// (o Node lê o .env no startup, antes do server.js dar chdir para a release).
+// O servidor standalone do Next NÃO carrega o .env sozinho — daí o --env-file
+// (lê de forma literal; chaves com '$', como a do Asaas, não precisam escapar).
+//
+// ATENÇÃO: como o app roda a partir da pasta de release, o UPLOAD_DIR no .env
+// PRECISA ser um caminho ABSOLUTO (ex.: /var/www/catalogo/uploads).
 
 module.exports = {
   apps: [
     {
       name: 'catalogo-digital',
-      // Ajuste o cwd para o diretório onde você fez o deploy:
-      cwd: '/var/www/catalogo-digital',
-      script: '.next/standalone/server.js',
+      cwd: '/var/www/catalogo-digital', // onde está o .env (e o git)
+      script: '/var/www/catalogo-current/server.js', // symlink -> release ativa
       node_args: '--env-file=.env',
       instances: 1,
       exec_mode: 'fork',
