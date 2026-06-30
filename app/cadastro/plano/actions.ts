@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { provisionSubscription } from '@/lib/billing/service'
+import { gateway } from '@/lib/billing'
 import { setStoreStatus } from '@/lib/data/billing'
 import { fieldErrors } from '@/lib/validation'
 import { rateLimit } from '@/lib/rate-limit'
@@ -65,4 +66,37 @@ export async function checkActivationAction(): Promise<{ status: string | null }
   if (!storeId) return { status: null }
   const store = await prisma.store.findUnique({ where: { id: storeId }, select: { status: true } })
   return { status: store?.status ?? null }
+}
+
+/**
+ * Reabre a página de pagamento hospedada do Asaas. O checkout é um redirect
+ * único no choosePlanAction; quem fecha a aba sem pagar fica preso na tela de
+ * espera — esta action rebusca a invoiceUrl da assinatura e redireciona de novo.
+ */
+export async function reopenCheckoutAction(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const session = await auth()
+  const storeId = session?.user?.storeId
+  if (!storeId) redirect('/painel/login')
+
+  const sub = await prisma.subscription.findUnique({
+    where: { storeId },
+    select: { gatewaySubscriptionId: true },
+  })
+  if (!sub?.gatewaySubscriptionId) {
+    return { error: 'Não encontramos sua assinatura. Fale com o suporte.' }
+  }
+
+  let url: string | null = null
+  try {
+    url = await gateway.getSubscriptionPaymentUrl(sub.gatewaySubscriptionId)
+  } catch {
+    url = null
+  }
+  if (!url) {
+    return { error: 'Não foi possível abrir o pagamento agora. Tente novamente em instantes.' }
+  }
+  redirect(url) // página de pagamento hospedada do Asaas
 }
