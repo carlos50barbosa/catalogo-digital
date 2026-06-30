@@ -62,6 +62,7 @@ export class AsaasGateway implements BillingGateway {
     cycle?: string
     description?: string
     externalReference?: string
+    callback?: { successUrl: string; autoRedirect?: boolean }
   }): Promise<GatewaySubscription> {
     const data = await asaasFetch<{ id: string; status?: string; nextDueDate?: string }>(
       '/subscriptions',
@@ -75,6 +76,7 @@ export class AsaasGateway implements BillingGateway {
           cycle: input.cycle ?? 'MONTHLY',
           description: input.description,
           externalReference: input.externalReference,
+          callback: input.callback,
         }),
       },
     )

@@ -34,6 +34,8 @@ export interface BillingGateway {
     cycle?: string
     description?: string
     externalReference?: string
+    /** Redireciona o cliente de volta ao site após pagar no checkout hospedado. */
+    callback?: { successUrl: string; autoRedirect?: boolean }
   }): Promise<GatewaySubscription>
 
   updateSubscription(

@@ -52,14 +52,31 @@ export async function provisionSubscription(opts: {
     })
 
     const nextDue = ymd(trial ? addDays(new Date(), config.signup.trialDays) : new Date())
-    const sub = await gateway.createSubscription({
+    const subInput = {
       customerId: customer.id,
       billingType: opts.billingType,
       value,
       nextDueDate: nextDue,
       description: `Assinatura ${PLANS[opts.plan].label} — ${store.name}`,
       externalReference: store.id,
-    })
+    }
+    // Após pagar no checkout hospedado, o Asaas traz o cliente de volta ao site.
+    // O Asaas só aceita o successUrl se o domínio estiver cadastrado na conta
+    // (Minha Conta › Informações). Se rejeitar, criamos sem callback para o
+    // pagamento nunca travar — o redirect passa a funcionar assim que o domínio
+    // for cadastrado, sem precisar de novo deploy.
+    let sub: Awaited<ReturnType<typeof gateway.createSubscription>>
+    try {
+      sub = await gateway.createSubscription({
+        ...subInput,
+        callback: {
+          successUrl: `${config.appUrl.replace(/\/+$/, '')}/cadastro/aguardando`,
+          autoRedirect: true,
+        },
+      })
+    } catch {
+      sub = await gateway.createSubscription(subInput)
+    }
 
     // URL do checkout hospedado: a 1ª cobrança da assinatura.
     let checkoutUrl: string | null = null
