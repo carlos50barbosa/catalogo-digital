@@ -7,6 +7,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getProduct,
   setProductAvailability,
   setProductPrice,
 } from '@/lib/data/products'
@@ -14,7 +15,7 @@ import { getStoreForPanel, countProducts } from '@/lib/data/stores'
 import { canAddProduct, productLimit } from '@/lib/plans'
 import { getCatalogItem } from '@/lib/data/catalog'
 import { productSchema, fieldErrors } from '@/lib/validation'
-import { saveImage, hasUpload } from '@/lib/upload'
+import { saveImage, hasUpload, deleteImage } from '@/lib/upload'
 import { emptyToNull, type ActionState } from '@/lib/action-state'
 
 function parseProductForm(formData: FormData) {
@@ -94,7 +95,11 @@ export async function updateProductAction(
   // Mantém a imagem atual (campo oculto) a menos que uma nova seja enviada.
   let imageUrl: string | null = parsed.data.imageUrl ?? null
   const file = formData.get('image')
+  let oldImageUrl: string | null = null
   if (hasUpload(file)) {
+    // Guarda a imagem atual para apagar após trocar (evita arquivo órfão).
+    const current = await getProduct(storeId, id)
+    oldImageUrl = current?.imageUrl ?? null
     try {
       imageUrl = await saveImage(file, `stores/${storeId}/products`)
     } catch (e) {
@@ -113,6 +118,9 @@ export async function updateProductAction(
     isAvailable: parsed.data.isAvailable ?? true,
   })
   if (!ok) return { error: 'Produto não encontrado.' }
+
+  // Remove o upload antigo trocado (só se for arquivo próprio da loja).
+  if (oldImageUrl && oldImageUrl !== imageUrl) await deleteImage(oldImageUrl)
 
   revalidatePath('/painel/produtos')
   redirect('/painel/produtos')
@@ -145,7 +153,9 @@ export async function updatePriceAction(
 
 export async function deleteProductAction(id: string): Promise<{ ok: boolean; error?: string }> {
   const { storeId } = await requireStore()
+  const current = await getProduct(storeId, id) // imageUrl antes de excluir
   const ok = await deleteProduct(storeId, id)
+  if (ok && current?.imageUrl) await deleteImage(current.imageUrl)
   revalidatePath('/painel/produtos')
   revalidatePath('/painel')
   return ok ? { ok } : { ok, error: 'Produto não encontrado.' }

@@ -9,7 +9,9 @@ import type { Role } from '@/lib/types'
 export const authConfig = {
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
-  session: { strategy: 'jwt' },
+  // Janela de sessão de 7 dias (era o default de 30) — reduz a exposição de um
+  // token vazado. A revogação por troca de senha é feita no jwt de auth.ts.
+  session: { strategy: 'jwt', maxAge: 7 * 24 * 60 * 60 },
   pages: {
     signIn: '/painel/login',
   },
@@ -32,11 +34,13 @@ export const authConfig = {
       return true
     },
     jwt({ token, user }) {
-      // No login, copia storeId/role/slug do usuário para o token.
+      // No login, copia storeId/role/slug + pwc do usuário para o token.
+      // (Edge-safe: sem Prisma. A checagem de revogação vive no jwt de auth.ts.)
       if (user) {
         token.storeId = user.storeId
         token.role = user.role
         token.storeSlug = user.storeSlug
+        token.pwc = user.passwordChangedAt
       }
       return token
     },

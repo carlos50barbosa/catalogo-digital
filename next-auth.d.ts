@@ -7,6 +7,8 @@ declare module 'next-auth' {
     storeId: string
     role: Role
     storeSlug: string
+    /** epoch ms da última troca de senha (revogação de sessão). */
+    passwordChangedAt: number | null
   }
 
   interface Session {
@@ -24,5 +26,7 @@ declare module 'next-auth/jwt' {
     storeId: string
     role: Role
     storeSlug: string
+    /** epoch ms da senha no momento da emissão do token (revogação). */
+    pwc: number | null
   }
 }

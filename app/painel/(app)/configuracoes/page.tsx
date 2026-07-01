@@ -4,6 +4,7 @@ import { serializeSettings } from '@/lib/serialize'
 import { can } from '@/lib/plans'
 import { stripBrDdi } from '@/lib/utils'
 import { SettingsForm } from '@/components/admin/SettingsForm'
+import { DeleteStoreZone } from '@/components/admin/DeleteStoreZone'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,8 @@ export default async function SettingsPage() {
           orderMessageTemplate: settings.orderMessageTemplate,
         }}
       />
+
+      <DeleteStoreZone storeName={store?.name ?? 'sua loja'} />
     </div>
   )
 }

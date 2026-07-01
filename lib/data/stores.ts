@@ -1,6 +1,20 @@
 import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
+import { storage } from '@/lib/storage'
 import type { Prisma, Fulfillment } from '@prisma/client'
+
+/**
+ * Exclui a loja e TODOS os dados vinculados (LGPD / porta de saída).
+ * As FKs têm onDelete: Cascade, então o delete remove usuários, produtos,
+ * pedidos, clientes, fiado, assinatura e settings. Depois apaga as imagens da
+ * loja do storage. Auditoria (AdminAuditLog) e BillingEvent sobrevivem de
+ * propósito (sem FK / SetNull). NÃO cancela a assinatura no gateway — quem
+ * chama deve cancelar antes, se aplicável.
+ */
+export async function deleteStore(storeId: string): Promise<void> {
+  await prisma.store.delete({ where: { id: storeId } })
+  await storage.deletePrefix(`stores/${storeId}`)
+}
 
 /**
  * Repositório de Store.

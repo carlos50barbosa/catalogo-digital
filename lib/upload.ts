@@ -31,3 +31,21 @@ export async function saveImage(file: File, prefix: string): Promise<string> {
 export function hasUpload(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.size > 0
 }
+
+/**
+ * Apaga do disco uma imagem previamente enviada — SOMENTE se for um upload
+ * próprio da loja (prefixo `/uploads/stores/...`). Imagens da biblioteca
+ * (catalog) e URLs externas são compartilhadas e NUNCA são removidas.
+ * Silencioso: falha ao apagar não deve quebrar a ação chamadora.
+ */
+export async function deleteImage(imageUrl: string | null | undefined): Promise<void> {
+  if (!imageUrl) return
+  const base = `${config.uploadPublicPath}/` // ex.: "/uploads/"
+  if (!imageUrl.startsWith(`${base}stores/`)) return
+  const key = imageUrl.slice(base.length) // ex.: "stores/<id>/products/<uuid>.jpg"
+  try {
+    await storage.delete(key)
+  } catch {
+    // arquivo já ausente ou erro de FS: ignora
+  }
+}

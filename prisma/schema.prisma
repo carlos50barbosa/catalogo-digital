@@ -117,6 +117,7 @@ model User {
   emailVerifyExpires   DateTime?
   passwordResetToken   String?   @unique
   passwordResetExpires DateTime?
+  passwordChangedAt    DateTime? // troca de senha invalida sessões JWT emitidas antes
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -390,4 +391,18 @@ model BillingEvent {
   store Store? @relation(fields: [storeId], references: [id], onDelete: SetNull)
 
   @@index([storeId])
+}
+
+/// Trilha de auditoria das ações do SUPERADMIN sobre lojas (mexem em dinheiro/
+/// acesso). Sem FK de propósito: o registro sobrevive à exclusão da loja/usuário.
+model AdminAuditLog {
+  id            String   @id @default(cuid())
+  actorUserId   String // id do SUPERADMIN que executou
+  action        String // ex.: OVERRIDE_STATUS, CHANGE_PLAN, CREATE_SUBSCRIPTION, CANCEL_SUBSCRIPTION, DELETE_STORE
+  targetStoreId String?
+  detail        Json? // contexto (status novo, plano, valores...)
+  createdAt     DateTime @default(now())
+
+  @@index([targetStoreId])
+  @@index([actorUserId])
 }

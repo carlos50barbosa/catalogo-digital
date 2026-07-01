@@ -41,8 +41,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           storeId: user.storeId,
           role: user.role,
           storeSlug: user.store.slug,
+          passwordChangedAt: user.passwordChangedAt ? user.passwordChangedAt.getTime() : null,
         }
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    // Sobrescreve o jwt edge para, no runtime Node, REVOGAR a sessão quando a
+    // senha foi trocada depois da emissão do token (defesa pós "recuperar senha").
+    async jwt({ token, user }) {
+      if (user) {
+        // Login: copia claims + pwc (mesma lógica do edge).
+        token.storeId = user.storeId
+        token.role = user.role
+        token.storeSlug = user.storeSlug
+        token.pwc = user.passwordChangedAt
+        return token
+      }
+      if (token.sub) {
+        const u = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { passwordChangedAt: true },
+        })
+        const changed = u?.passwordChangedAt ? u.passwordChangedAt.getTime() : null
+        const tokenPwc = typeof token.pwc === 'number' ? token.pwc : null
+        if (changed && (tokenPwc == null || changed > tokenPwc)) {
+          return null // token emitido antes da troca de senha => sessão revogada
+        }
+      }
+      return token
+    },
+  },
 })

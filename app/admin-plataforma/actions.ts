@@ -13,6 +13,8 @@ import {
 import { PLANS } from '@/lib/plans'
 import { gateway } from '@/lib/billing'
 import { provisionSubscription } from '@/lib/billing/service'
+import { recordAdminAudit } from '@/lib/data/audit'
+import { deleteStore } from '@/lib/data/stores'
 import { config } from '@/lib/config'
 
 const planEnum = z.enum(['ESSENCIAL', 'PROFISSIONAL', 'PREMIUM'])
@@ -21,16 +23,17 @@ const billingEnum = z.enum(['PIX', 'BOLETO', 'CREDIT_CARD', 'UNDEFINED'])
 
 /** Override manual de status (essencial no início semi-manual e em casos de borda). */
 export async function overrideStatusAction(storeId: string, status: string) {
-  await requireSuperadmin()
+  const { userId } = await requireSuperadmin()
   const s = statusEnum.safeParse(status)
   if (!s.success) return { ok: false as const, error: 'Status inválido.' }
   await setStoreStatus(storeId, s.data)
+  await recordAdminAudit({ actorUserId: userId, action: 'OVERRIDE_STATUS', targetStoreId: storeId, detail: { status: s.data } })
   revalidatePath('/admin-plataforma')
   return { ok: true as const }
 }
 
 export async function changePlanAction(storeId: string, plan: string) {
-  await requireSuperadmin()
+  const { userId } = await requireSuperadmin()
   const p = planEnum.safeParse(plan)
   if (!p.success) return { ok: false as const, error: 'Plano inválido.' }
 
@@ -48,6 +51,7 @@ export async function changePlanAction(storeId: string, plan: string) {
 
   await setStorePlan(storeId, p.data)
   await upsertSubscription(storeId, { plan: p.data, value: PLANS[p.data].value })
+  await recordAdminAudit({ actorUserId: userId, action: 'CHANGE_PLAN', targetStoreId: storeId, detail: { plan: p.data } })
   revalidatePath('/admin-plataforma')
   return { ok: true as const }
 }
@@ -64,7 +68,7 @@ export async function createSubscriptionAction(
   billingType: string,
   cpfCnpj?: string,
 ) {
-  await requireSuperadmin()
+  const { userId } = await requireSuperadmin()
   const p = planEnum.safeParse(plan)
   const b = billingEnum.safeParse(billingType)
   if (!p.success || !b.success) return { ok: false as const, error: 'Dados inválidos.' }
@@ -89,12 +93,13 @@ export async function createSubscriptionAction(
     await upsertSubscription(storeId, { plan: p.data, value, billingType: b.data, status: 'PENDING' })
   }
 
+  await recordAdminAudit({ actorUserId: userId, action: 'CREATE_SUBSCRIPTION', targetStoreId: storeId, detail: { plan: p.data, billingType: b.data } })
   revalidatePath('/admin-plataforma')
   return { ok: true as const }
 }
 
 export async function cancelSubscriptionAction(storeId: string) {
-  await requireSuperadmin()
+  const { userId } = await requireSuperadmin()
 
   if (config.asaas.apiKey) {
     const sub = await getSubscription(storeId)
@@ -109,6 +114,30 @@ export async function cancelSubscriptionAction(storeId: string) {
 
   await setSubscriptionStatus(storeId, 'CANCELED')
   await setStoreStatus(storeId, 'CANCELED')
+  await recordAdminAudit({ actorUserId: userId, action: 'CANCEL_SUBSCRIPTION', targetStoreId: storeId })
+  revalidatePath('/admin-plataforma')
+  return { ok: true as const }
+}
+
+/** Exclusão definitiva da loja (SUPERADMIN). Cancela no gateway, audita e apaga
+ *  todos os dados + imagens. A trilha de auditoria sobrevive (sem FK). */
+export async function deleteStoreAction(storeId: string) {
+  const { userId } = await requireSuperadmin()
+
+  if (config.asaas.apiKey) {
+    const sub = await getSubscription(storeId)
+    if (sub?.gatewaySubscriptionId) {
+      try {
+        await gateway.cancelSubscription(sub.gatewaySubscriptionId)
+      } catch {
+        // segue com a exclusão mesmo se o gateway falhar
+      }
+    }
+  }
+
+  // Audita ANTES de apagar (a loja-alvo deixa de existir logo em seguida).
+  await recordAdminAudit({ actorUserId: userId, action: 'DELETE_STORE', targetStoreId: storeId })
+  await deleteStore(storeId)
   revalidatePath('/admin-plataforma')
   return { ok: true as const }
 }

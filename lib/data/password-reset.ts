@@ -31,7 +31,13 @@ export async function resetPassword(token: string, newPassword: string): Promise
   const passwordHash = await bcrypt.hash(newPassword, 10)
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash, passwordResetToken: null, passwordResetExpires: null },
+    // passwordChangedAt revoga tokens JWT emitidos antes desta troca.
+    data: {
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      passwordChangedAt: new Date(),
+    },
   })
   return true
 }

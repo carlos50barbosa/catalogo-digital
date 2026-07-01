@@ -18,4 +18,6 @@ export type SavedFile = {
 export interface FileStorage {
   save(file: UploadFile, opts?: { prefix?: string }): Promise<SavedFile>
   delete(key: string): Promise<void>
+  /** Remove recursivamente tudo sob um prefixo (ex.: apagar a pasta da loja). */
+  deletePrefix(prefix: string): Promise<void>
 }

@@ -124,6 +124,25 @@ Senha:  demo1234
 
 Veja `.env.example`.
 
+### Entregabilidade de e-mail (SPF/DKIM/DMARC)
+
+O onboarding inteiro depende de e-mail que **chegue**: verificação de conta,
+recuperação de senha e boas-vindas. O SMTP aceitar a mensagem NÃO garante entrega —
+sem autenticação de domínio, Gmail/Outlook jogam em spam e o funil trava em silêncio.
+Configure no DNS do domínio de envio (`cataloggo.app.br`):
+
+- **SPF** — registro TXT autorizando o servidor/serviço de envio
+  (ex.: `v=spf1 include:<provedor> -all`).
+- **DKIM** — chave pública (TXT/CNAME) fornecida pelo provedor de e-mail; assina cada mensagem.
+- **DMARC** — TXT em `_dmarc` com política e relatórios
+  (ex.: `v=DMARC1; p=quarantine; rua=mailto:dmarc@cataloggo.app.br`).
+- **Remetente coerente** — `EMAIL_FROM` no mesmo domínio autenticado
+  (não usar Gmail/Hotmail como remetente via SMTP próprio).
+
+Recomendado: usar um provedor transacional (Resend, Amazon SES, Postmark) com
+feedback de **bounce/complaint** e reputação dedicada, em vez de SMTP genérico.
+Teste a pontuação em [mail-tester.com](https://www.mail-tester.com) antes de ir ao ar.
+
 ---
 
 ## Scripts úteis

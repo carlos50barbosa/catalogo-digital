@@ -41,4 +41,15 @@ export class LocalDiskStorage implements FileStorage {
       // arquivo já inexistente: ignora
     }
   }
+
+  async deletePrefix(prefix: string): Promise<void> {
+    const safe = prefix.replace(/\.\.(\/|\\)/g, '')
+    if (!safe) return // nunca apagar a raiz de uploads
+    const target = path.join(resolveUploadDir(), safe)
+    try {
+      await fs.rm(target, { recursive: true, force: true })
+    } catch {
+      // pasta já inexistente: ignora
+    }
+  }
 }
