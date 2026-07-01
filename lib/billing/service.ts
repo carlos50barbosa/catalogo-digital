@@ -86,16 +86,38 @@ export async function provisionSubscription(opts: {
       checkoutUrl = null
     }
 
-    await setStorePlan(opts.storeId, opts.plan)
-    await upsertSubscription(opts.storeId, {
-      plan: opts.plan,
-      value,
-      billingType: opts.billingType,
-      status: sub.status ?? 'PENDING',
-      gatewayCustomerId: customer.id,
-      gatewaySubscriptionId: sub.id,
-      nextDueDate: sub.nextDueDate ? new Date(sub.nextDueDate) : new Date(nextDue),
-    })
+    // Persistência local ATÔMICA: o webhook acha a loja pelo gatewaySubscriptionId/
+    // gatewayCustomerId; se o plano gravasse mas a Subscription não (ou vice-versa),
+    // o cliente pagaria e a loja nunca ativaria. As duas escritas vão na mesma
+    // transação — ou ambas entram, ou nenhuma.
+    try {
+      await prisma.$transaction(async (tx) => {
+        await setStorePlan(opts.storeId, opts.plan, tx)
+        await upsertSubscription(
+          opts.storeId,
+          {
+            plan: opts.plan,
+            value,
+            billingType: opts.billingType,
+            status: sub.status ?? 'PENDING',
+            gatewayCustomerId: customer.id,
+            gatewaySubscriptionId: sub.id,
+            nextDueDate: sub.nextDueDate ? new Date(sub.nextDueDate) : new Date(nextDue),
+          },
+          tx,
+        )
+      })
+    } catch (e) {
+      // A assinatura JÁ existe no Asaas, mas a gravação local falhou. Sem os IDs do
+      // gateway no banco o webhook não acha a loja — logamos para reconciliação
+      // manual e propagamos o erro ao chamador.
+      console.error(
+        `[billing] Falha ao persistir assinatura local (store=${opts.storeId}, ` +
+          `asaasCustomer=${customer.id}, asaasSubscription=${sub.id}). Reconciliar manualmente.`,
+        e,
+      )
+      throw e
+    }
 
     return { ok: true, checkoutUrl }
   } catch (e) {

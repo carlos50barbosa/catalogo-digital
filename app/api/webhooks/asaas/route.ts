@@ -1,14 +1,10 @@
 import type { NextRequest } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { config } from '@/lib/config'
 import { prisma } from '@/lib/prisma'
 import { sendWelcomeEmail } from '@/lib/email'
-import {
-  eventAlreadyProcessed,
-  recordBillingEvent,
-  getSubscriptionByGatewaySubId,
-  setStoreStatus,
-  setSubscriptionStatus,
-} from '@/lib/data/billing'
+import { getSubscriptionByGatewaySubId } from '@/lib/data/billing'
+import { deriveIsActive } from '@/lib/store-status'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,10 +14,16 @@ function addMonths(d: Date, n: number): Date {
   return x
 }
 
+type Welcome = { email: string; name: string }
+
 /**
  * Webhook do Asaas — sincroniza o status da loja com a cobrança.
  * Segurança: header `asaas-access-token` deve bater com ASAAS_WEBHOOK_TOKEN.
- * Idempotência: cada evento é registrado em BillingEvent (gatewayEventId único).
+ * Idempotência ATÔMICA: o INSERT de BillingEvent (gatewayEventId @unique) é a
+ * trava. Gravar o evento e aplicar as mutações de status acontecem na MESMA
+ * transação — se qualquer mutação falhar, tudo desfaz e o Asaas reprocessa no
+ * retry (a loja paga não fica sem ativar por falha silenciosa). Se o evento já
+ * foi processado, o unique dispara P2002 e respondemos 200 sem reexecutar.
  */
 export async function POST(req: NextRequest) {
   // 1) Autenticidade
@@ -46,9 +48,6 @@ export async function POST(req: NextRequest) {
   const eventId = body.id ?? (payment?.id ? `${event}:${payment.id}` : '')
   if (!event || !eventId) return new Response('ignored', { status: 200 })
 
-  // 2) Idempotência — não processa o mesmo evento duas vezes.
-  if (await eventAlreadyProcessed(eventId)) return new Response('ok', { status: 200 })
-
   // Resolve a loja pela assinatura (ou pelo cliente).
   let storeId: string | null = null
   if (payment?.subscription) {
@@ -61,54 +60,99 @@ export async function POST(req: NextRequest) {
     })
     storeId = sub?.storeId ?? null
   }
+  if (!storeId) {
+    // Evento sem loja resolvível (cliente/assinatura fora do nosso banco). Fica
+    // registrado para auditoria; logamos para reconciliação manual.
+    console.warn(
+      `[webhook asaas] evento ${event}/${eventId} sem loja resolvível ` +
+        `(subscription=${payment?.subscription ?? '-'}, customer=${payment?.customer ?? '-'})`,
+    )
+  }
 
-  await recordBillingEvent({ storeId, gatewayEventId: eventId, type: event, payload: body })
+  // 2) Idempotência + efeitos na MESMA transação. O callback devolve os dados do
+  //    e-mail de boas-vindas (se for a 1ª ativação) para ser enviado FORA da tx.
+  let welcome: Welcome | null = null
+  try {
+    welcome = await prisma.$transaction(async (tx): Promise<Welcome | null> => {
+      // O INSERT é a trava de idempotência: se o evento já foi visto, o @unique
+      // lança P2002 e a transação inteira aborta (nada é reaplicado).
+      await tx.billingEvent.create({
+        data: {
+          storeId,
+          gatewayEventId: eventId,
+          type: event,
+          payload: body as Prisma.InputJsonValue,
+        },
+      })
 
-  // 3) Mapeamento evento -> status (resiliente; eventos não tratados ficam só logados).
-  if (storeId) {
-    switch (event) {
-      case 'PAYMENT_CONFIRMED':
-      case 'PAYMENT_RECEIVED': {
-        // Primeira ativação (self-service): a loja sai de PENDING/TRIALING.
-        const store = await prisma.store.findUnique({
-          where: { id: storeId },
-          select: {
-            status: true,
-            name: true,
-            users: { where: { role: 'OWNER' }, take: 1, select: { email: true } },
-          },
-        })
-        const firstActivation = store?.status === 'PENDING' || store?.status === 'TRIALING'
+      if (!storeId) return null // registrado; nada a mutar
 
-        await setSubscriptionStatus(storeId, 'ACTIVE')
-        await setStoreStatus(storeId, 'ACTIVE')
-        if (payment?.dueDate) {
-          await prisma.subscription.updateMany({
-            where: { storeId },
-            data: { nextDueDate: addMonths(new Date(payment.dueDate), 1) },
+      // 3) Mapeamento evento -> status (resiliente; eventos não tratados ficam só logados).
+      switch (event) {
+        case 'PAYMENT_CONFIRMED':
+        case 'PAYMENT_RECEIVED': {
+          const store = await tx.store.findUnique({
+            where: { id: storeId },
+            select: {
+              status: true,
+              name: true,
+              users: { where: { role: 'OWNER' }, take: 1, select: { email: true } },
+            },
           })
-        }
+          const firstActivation = store?.status === 'PENDING' || store?.status === 'TRIALING'
 
-        if (firstActivation && store?.users[0]?.email) {
-          try {
-            await sendWelcomeEmail(store.users[0].email, store.name, `${config.appUrl}/painel`)
-          } catch {
-            // e-mail é secundário; não falha o webhook
+          await tx.subscription.updateMany({ where: { storeId }, data: { status: 'ACTIVE' } })
+          await tx.store.update({
+            where: { id: storeId },
+            data: { status: 'ACTIVE', isActive: deriveIsActive('ACTIVE') },
+          })
+          if (payment?.dueDate) {
+            await tx.subscription.updateMany({
+              where: { storeId },
+              data: { nextDueDate: addMonths(new Date(payment.dueDate), 1) },
+            })
           }
+
+          const ownerEmail = store?.users[0]?.email
+          return firstActivation && ownerEmail && store
+            ? { email: ownerEmail, name: store.name }
+            : null
         }
-        break
+        case 'PAYMENT_OVERDUE':
+          await tx.store.update({
+            where: { id: storeId },
+            data: { status: 'PAST_DUE', isActive: deriveIsActive('PAST_DUE') },
+          })
+          return null
+        case 'PAYMENT_REFUNDED':
+        case 'PAYMENT_CHARGEBACK_REQUESTED':
+        case 'PAYMENT_DELETED':
+          await tx.subscription.updateMany({ where: { storeId }, data: { status: 'CANCELED' } })
+          await tx.store.update({
+            where: { id: storeId },
+            data: { status: 'SUSPENDED', isActive: deriveIsActive('SUSPENDED') },
+          })
+          return null
+        default:
+          return null
       }
-      case 'PAYMENT_OVERDUE':
-        await setStoreStatus(storeId, 'PAST_DUE')
-        break
-      case 'PAYMENT_REFUNDED':
-      case 'PAYMENT_CHARGEBACK_REQUESTED':
-      case 'PAYMENT_DELETED':
-        await setSubscriptionStatus(storeId, 'CANCELED')
-        await setStoreStatus(storeId, 'SUSPENDED')
-        break
-      default:
-        break
+    })
+  } catch (e) {
+    // Evento já processado (corrida/retry do Asaas): o unique barra a 2ª gravação.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      return new Response('ok', { status: 200 })
+    }
+    // Mutação falhou → transação desfeita → deixamos o Asaas reprocessar no retry.
+    console.error(`[webhook asaas] falha ao processar evento ${event}/${eventId}`, e)
+    return new Response('erro ao processar', { status: 500 })
+  }
+
+  // Efeito colateral externo FORA da transação (não deve travar/desfazer o webhook).
+  if (welcome) {
+    try {
+      await sendWelcomeEmail(welcome.email, welcome.name, `${config.appUrl}/painel`)
+    } catch {
+      // e-mail é secundário; não falha o webhook
     }
   }
 

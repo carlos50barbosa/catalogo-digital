@@ -24,10 +24,15 @@ export async function setStoreStatus(storeId: string, status: StoreStatus) {
   })
 }
 
-/** Muda o plano da loja (e da assinatura, se houver). */
-export async function setStorePlan(storeId: string, plan: Plan) {
-  await prisma.store.update({ where: { id: storeId }, data: { plan } })
-  await prisma.subscription.updateMany({ where: { storeId }, data: { plan } })
+/** Muda o plano da loja (e da assinatura, se houver). Aceita um cliente de
+ *  transação para compor com outras escritas atomicamente. */
+export async function setStorePlan(
+  storeId: string,
+  plan: Plan,
+  db: Prisma.TransactionClient = prisma,
+) {
+  await db.store.update({ where: { id: storeId }, data: { plan } })
+  await db.subscription.updateMany({ where: { storeId }, data: { plan } })
 }
 
 /** Atualiza só o status da assinatura (espelho do gateway). */
@@ -46,8 +51,9 @@ export async function upsertSubscription(
     gatewaySubscriptionId?: string | null
     nextDueDate?: Date | null
   },
+  db: Prisma.TransactionClient = prisma,
 ) {
-  return prisma.subscription.upsert({
+  return db.subscription.upsert({
     where: { storeId },
     create: {
       storeId,
@@ -96,27 +102,4 @@ export async function platformStats() {
   ])
   const mrr = activeSubs.reduce((s, x) => s + decimalToNumber(x.value), 0)
   return { total, active, pastDue, suspended, mrr }
-}
-
-// ---------- Webhook (idempotência) ----------
-
-export async function eventAlreadyProcessed(gatewayEventId: string): Promise<boolean> {
-  const e = await prisma.billingEvent.findUnique({ where: { gatewayEventId } })
-  return !!e
-}
-
-export function recordBillingEvent(data: {
-  storeId?: string | null
-  gatewayEventId: string
-  type: string
-  payload: unknown
-}) {
-  return prisma.billingEvent.create({
-    data: {
-      storeId: data.storeId ?? null,
-      gatewayEventId: data.gatewayEventId,
-      type: data.type,
-      payload: data.payload as Prisma.InputJsonValue,
-    },
-  })
 }
