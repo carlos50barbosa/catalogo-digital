@@ -42,6 +42,7 @@ export function CheckoutForm({
   const [address, setAddress] = useState('')
   const [payment, setPayment] = useState<(typeof PAYMENTS)[number]>('Dinheiro')
   const [consent, setConsent] = useState(false)
+  const [marketing, setMarketing] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [pixCopied, setPixCopied] = useState(false)
@@ -92,6 +93,7 @@ export function CheckoutForm({
         address: fullAddress || null,
         paymentMethod: payment,
         consent,
+        marketingConsent: marketing,
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
       })
 
@@ -277,6 +279,19 @@ export function CheckoutForm({
           </label>
           <FieldError message={errors.consent} />
         </div>
+
+        {/* Opt-in OPCIONAL de marketing (LGPD: finalidade separada da execução do pedido) */}
+        <label className="flex items-start gap-2 text-sm text-neutral-600">
+          <input
+            type="checkbox"
+            checked={marketing}
+            onChange={(e) => setMarketing(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-neutral-300 accent-[var(--accent)]"
+          />
+          <span>
+            Quero receber ofertas e novidades do {store.name} pelo WhatsApp. (opcional)
+          </span>
+        </label>
       </div>
 
       <div className="border-t border-neutral-200 p-4">

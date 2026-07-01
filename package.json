@@ -13,7 +13,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "create-store": "tsx scripts/create-store.ts",
-    "asaas:test": "node --env-file=.env --import tsx scripts/asaas-sandbox-test.ts"
+    "asaas:test": "node --env-file=.env --import tsx scripts/asaas-sandbox-test.ts",
+    "fiado:dedupe": "node --env-file=.env --import tsx scripts/dedupe-fiado-reversals.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

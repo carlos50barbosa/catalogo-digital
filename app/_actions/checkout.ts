@@ -49,6 +49,7 @@ export async function createOrderAction(input: unknown): Promise<CheckoutResult>
     fulfillment: data.fulfillment,
     address: data.address ?? null,
     paymentMethod: data.paymentMethod,
+    marketingConsent: data.marketingConsent,
   })
   if (!result.ok) return { ok: false, error: result.error }
 

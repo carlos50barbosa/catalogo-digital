@@ -53,9 +53,14 @@ export default async function PrivacyPage({ params }: { params: Promise<{ slug: 
         <section>
           <h2 className="font-semibold text-neutral-900">2. Como usamos seus dados</h2>
           <p>
-            Os dados são usados <strong>exclusivamente</strong> por {store.name} para receber,
-            organizar e atender o seu pedido, e para eventual contato sobre ele via WhatsApp. Não
-            vendemos nem compartilhamos seus dados com terceiros para fins de marketing.
+            Os dados são usados por {store.name} para receber, organizar e atender o seu pedido, e
+            para eventual contato sobre ele via WhatsApp. Não vendemos nem compartilhamos seus dados
+            com terceiros para fins de marketing.
+          </p>
+          <p className="mt-2">
+            Se você marcar a opção <em>&ldquo;receber ofertas e novidades&rdquo;</em> no checkout,{' '}
+            {store.name} poderá enviar promoções pelo WhatsApp. Esse consentimento é{' '}
+            <strong>opcional</strong> e pode ser revogado a qualquer momento pedindo à loja.
           </p>
         </section>
 

@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ExternalLink, Trash2, CreditCard, Boxes, CalendarClock } from 'lucide-react'
+import { ExternalLink, Trash2, CreditCard, Boxes, CalendarClock, Ban } from 'lucide-react'
 import {
   overrideStatusAction,
   changePlanAction,
   createSubscriptionAction,
   cancelSubscriptionAction,
+  deleteStoreAction,
 } from '@/app/admin-plataforma/actions'
 import { STATUS_LABELS } from '@/lib/store-status'
 import { PLANS, ORDERED_PLANS } from '@/lib/plans'
@@ -193,7 +194,22 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
                   }}
                   className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50"
                 >
-                  <Trash2 className="h-4 w-4" /> Cancelar
+                  <Ban className="h-4 w-4" /> Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const typed = prompt(
+                      `EXCLUIR "${r.name}" apaga DEFINITIVAMENTE todos os dados (produtos, pedidos, clientes, fiado) e a conta. Não dá para desfazer.\n\nDigite o nome da loja para confirmar:`,
+                    )
+                    if (typed === null) return
+                    if (typed.trim() === r.name) run(() => deleteStoreAction(r.id))
+                    else alert('Nome não confere. Exclusão cancelada.')
+                  }}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4" /> Excluir
                 </button>
               </div>
             </li>

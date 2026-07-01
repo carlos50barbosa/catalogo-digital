@@ -342,6 +342,9 @@ model Customer {
   name        String
   phone       String
   address     String?
+  // Opt-in explícito p/ receber contato/ofertas por WhatsApp (LGPD). O telefone
+  // é coletado para EXECUTAR o pedido; usá-lo para marketing exige este consentimento.
+  marketingConsent Boolean @default(false)
   createdAt   DateTime  @default(now())
   lastOrderAt DateTime?
 

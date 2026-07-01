@@ -17,6 +17,8 @@ export type CreateOrderInput = {
   fulfillment: 'DELIVERY' | 'PICKUP'
   address?: string | null
   paymentMethod: string
+  /** Opt-in de marketing (LGPD): registra o consentimento no cliente. */
+  marketingConsent?: boolean
 }
 
 export type ComputedItem = {
@@ -113,10 +115,11 @@ export async function createOrder(
 
   // Upsert do cliente + criação do pedido numa transação.
   const order = await prisma.$transaction(async (tx) => {
+    const marketingConsent = input.marketingConsent ?? false
     const customer = await tx.customer.upsert({
       where: { storeId_phone: { storeId, phone } },
-      create: { storeId, name, phone, address, lastOrderAt: new Date() },
-      update: { name, address: address ?? undefined, lastOrderAt: new Date() },
+      create: { storeId, name, phone, address, marketingConsent, lastOrderAt: new Date() },
+      update: { name, address: address ?? undefined, marketingConsent, lastOrderAt: new Date() },
     })
     return tx.order.create({
       data: {

@@ -105,6 +105,8 @@ export const checkoutSchema = z.object({
   consent: z.boolean().refine((v) => v === true, {
     message: 'É necessário aceitar a política de privacidade.',
   }),
+  // Opt-in OPCIONAL para receber ofertas/contato por WhatsApp (LGPD).
+  marketingConsent: z.boolean().optional().default(false),
   items: z
     .array(
       z.object({
