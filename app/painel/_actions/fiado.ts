@@ -1,5 +1,6 @@
 'use server'
 
+import { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { requireStore } from '@/lib/auth-helpers'
 import { decimalToNumber } from '@/lib/format'
@@ -161,18 +162,27 @@ export async function reverseEntryAction(entryId: string): Promise<FiadoActionRe
 
   const opposite = entry.type === 'DEBIT' ? 'CREDIT' : 'DEBIT'
   const what = entry.type === 'DEBIT' ? 'compra' : 'pagamento'
-  const res = await postFiadoEntry(
-    storeId,
-    {
-      customerId: entry.customerId,
-      type: opposite,
-      amount: decimalToNumber(entry.amount),
-      description: `Estorno de ${what}${entry.description ? `: ${entry.description}` : ''}`,
-      reversesEntryId: entry.id,
-      createdByUserId: userId,
-    },
-    { force: true }, // estorno nunca é bloqueado por limite/excesso
-  )
+  let res
+  try {
+    res = await postFiadoEntry(
+      storeId,
+      {
+        customerId: entry.customerId,
+        type: opposite,
+        amount: decimalToNumber(entry.amount),
+        description: `Estorno de ${what}${entry.description ? `: ${entry.description}` : ''}`,
+        reversesEntryId: entry.id,
+        createdByUserId: userId,
+      },
+      { force: true }, // estorno nunca é bloqueado por limite/excesso
+    )
+  } catch (e) {
+    // @unique(reversesEntryId): corrida de estorno duplo — o banco barrou o 2º.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      return { ok: false, error: 'Este lançamento já foi estornado.' }
+    }
+    throw e
+  }
 
   if (res.ok) {
     revalidateFiado(entry.customerId)

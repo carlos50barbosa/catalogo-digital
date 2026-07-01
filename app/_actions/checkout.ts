@@ -7,6 +7,7 @@ import { serializeSettings } from '@/lib/serialize'
 import { checkoutSchema, fieldErrors } from '@/lib/validation'
 import { buildWhatsAppMessage, buildWhatsAppUrl } from '@/lib/order/buildWhatsAppMessage'
 import { rateLimit } from '@/lib/rate-limit'
+import { isStorePublic } from '@/lib/store-status'
 
 export type CheckoutResult =
   | { ok: true; waUrl: string; orderId: string }
@@ -35,7 +36,11 @@ export async function createOrderAction(input: unknown): Promise<CheckoutResult>
   const data = parsed.data
 
   const store = await getStoreBySlug(data.slug)
-  if (!store || !store.isActive) return { ok: false, error: 'Loja indisponível.' }
+  // Alinha o guard com a vitrine: só aceita pedido se a loja está pública
+  // (status vivo E publicada) — não só pelo campo legado isActive.
+  if (!store || !isStorePublic(store.status, store.published)) {
+    return { ok: false, error: 'Loja indisponível.' }
+  }
 
   const result = await createOrder(store.id, {
     items: data.items,

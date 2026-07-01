@@ -270,7 +270,10 @@ model FiadoEntry {
   description     String?
   orderId         String? // vincula a um pedido de origem
   dueDate         DateTime? // vencimento (apenas p/ débitos)
-  reversesEntryId String? // se estorno, aponta o lançamento estornado
+  // @unique: um lançamento só pode ser estornado UMA vez. Como é nullable, o MySQL
+  // permite vários NULLs e só barra reversesEntryId repetido — fecha o TOCTOU do
+  // estorno concorrente (dois estornos do mesmo lançamento).
+  reversesEntryId String?        @unique // se estorno, aponta o lançamento estornado
   createdByUserId String // auditoria (id do User da sessão)
   createdAt       DateTime       @default(now())
 
@@ -278,7 +281,7 @@ model FiadoEntry {
   fiadoAccount FiadoAccount @relation(fields: [fiadoAccountId], references: [id], onDelete: Cascade)
   order        Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
   reverses     FiadoEntry?  @relation("FiadoReversal", fields: [reversesEntryId], references: [id], onDelete: SetNull)
-  reversedBy   FiadoEntry[] @relation("FiadoReversal")
+  reversedBy   FiadoEntry?  @relation("FiadoReversal")
 
   @@index([storeId, fiadoAccountId, createdAt])
   @@index([storeId, customerId])
