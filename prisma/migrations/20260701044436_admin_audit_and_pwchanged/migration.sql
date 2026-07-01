@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `user` ADD COLUMN `passwordChangedAt` DATETIME(3) NULL;
+ALTER TABLE `User` ADD COLUMN `passwordChangedAt` DATETIME(3) NULL;
 
 -- CreateTable
 CREATE TABLE `AdminAuditLog` (
