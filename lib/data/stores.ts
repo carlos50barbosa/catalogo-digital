@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
 import type { Prisma, Fulfillment } from '@prisma/client'
 
@@ -9,13 +10,14 @@ import type { Prisma, Fulfillment } from '@prisma/client'
  * - Painel: a loja vem SEMPRE do storeId da sessão autenticada, nunca de input.
  */
 
-/** Vitrine pública — resolve a loja pelo slug. */
-export function getStoreBySlug(slug: string) {
+/** Vitrine pública — resolve a loja pelo slug. Memoizado por request (React
+ *  cache): generateMetadata e a página compartilham a mesma query no pageview. */
+export const getStoreBySlug = cache((slug: string) => {
   return prisma.store.findUnique({
     where: { slug },
     include: { settings: true },
   })
-}
+})
 
 /** Painel — carrega a loja pelo storeId (vindo da sessão). */
 export function getStoreForPanel(storeId: string) {

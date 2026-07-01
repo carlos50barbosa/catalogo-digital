@@ -166,6 +166,7 @@ export function StorefrontClient({
         settings={settings}
         items={cart.items}
         subtotal={cart.subtotal}
+        isOpen={openStatus.isOpen}
         setQty={cart.setQty}
         remove={cart.remove}
         clear={cart.clear}

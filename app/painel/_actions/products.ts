@@ -120,27 +120,33 @@ export async function updateProductAction(
 
 // --- Ações rápidas (chamadas direto do cliente, com storeId da sessão) ---
 
-export async function setAvailabilityAction(id: string, isAvailable: boolean) {
+export async function setAvailabilityAction(
+  id: string,
+  isAvailable: boolean,
+): Promise<{ ok: boolean; error?: string }> {
   const { storeId } = await requireStore()
   const ok = await setProductAvailability(storeId, id, isAvailable)
   revalidatePath('/painel/produtos')
-  return { ok }
+  return ok ? { ok } : { ok, error: 'Produto não encontrado.' }
 }
 
-export async function updatePriceAction(id: string, price: number) {
+export async function updatePriceAction(
+  id: string,
+  price: number,
+): Promise<{ ok: boolean; error?: string }> {
   const { storeId } = await requireStore()
   if (!Number.isFinite(price) || price < 0) {
     return { ok: false, error: 'Preço inválido.' }
   }
   const ok = await setProductPrice(storeId, id, price)
   revalidatePath('/painel/produtos')
-  return { ok }
+  return ok ? { ok } : { ok, error: 'Produto não encontrado.' }
 }
 
-export async function deleteProductAction(id: string) {
+export async function deleteProductAction(id: string): Promise<{ ok: boolean; error?: string }> {
   const { storeId } = await requireStore()
   const ok = await deleteProduct(storeId, id)
   revalidatePath('/painel/produtos')
   revalidatePath('/painel')
-  return { ok }
+  return ok ? { ok } : { ok, error: 'Produto não encontrado.' }
 }

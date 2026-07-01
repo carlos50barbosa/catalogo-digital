@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Minus, Plus, Trash2, ShoppingCart, CheckCircle2, MessageCircle, Info } from 'lucide-react'
+import { Minus, Plus, Trash2, ShoppingCart, CheckCircle2, MessageCircle, Info, Clock } from 'lucide-react'
 import { Sheet } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { ProductImage } from '@/components/ui/product-image'
@@ -16,6 +16,7 @@ export function CartSheet({
   settings,
   items,
   subtotal,
+  isOpen,
   setQty,
   remove,
   clear,
@@ -26,6 +27,8 @@ export function CartSheet({
   settings: SerializedSettings
   items: CartItem[]
   subtotal: number
+  /** null = loja sem horário configurado; false = fechada agora. */
+  isOpen: boolean | null
   setQty: (id: string, qty: number) => void
   remove: (id: string) => void
   clear: () => void
@@ -33,6 +36,18 @@ export function CartSheet({
   const [view, setView] = useState<'cart' | 'checkout' | 'confirmation'>('cart')
   const [waUrl, setWaUrl] = useState<string | null>(null)
   const isEmpty = items.length === 0
+
+  // Aviso quando a loja está fechada: o cliente ainda pode enviar o pedido.
+  const closedNote =
+    isOpen === false ? (
+      <div className="mx-4 mt-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+        <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+        <span>
+          A loja está <strong>fechada</strong> agora. Você pode enviar o pedido mesmo assim — o{' '}
+          {store.name} responde assim que abrir.
+        </span>
+      </div>
+    ) : null
 
   function close() {
     onClose()
@@ -80,6 +95,7 @@ export function CartSheet({
   if (view === 'checkout') {
     return (
       <Sheet open={open} onClose={close} title="Finalizar pedido">
+        {closedNote}
         <CheckoutForm
           store={store}
           settings={settings}
@@ -125,7 +141,9 @@ export function CartSheet({
           <p className="text-sm text-neutral-500">Adicione produtos para começar seu pedido.</p>
         </div>
       ) : (
-        <ul className="divide-y divide-neutral-100">
+        <>
+          {closedNote}
+          <ul className="divide-y divide-neutral-100">
           {items.map((item) => {
             const weighed = isWeighed(item.unit)
             const step = weighed ? 0.25 : 1
@@ -182,7 +200,8 @@ export function CartSheet({
               </li>
             )
           })}
-        </ul>
+          </ul>
+        </>
       )}
     </Sheet>
   )

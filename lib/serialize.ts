@@ -2,8 +2,9 @@ import type {
   Store,
   StoreSettings,
   Category,
-  Product,
   CatalogItem,
+  Prisma,
+  Unit,
 } from '@prisma/client'
 import { decimalToNumber } from '@/lib/format'
 import type {
@@ -64,11 +65,21 @@ export function serializeCategory(c: Category): SerializedCategory {
   return { id: c.id, name: c.name, sortOrder: c.sortOrder }
 }
 
-export function serializeProduct(p: Product): SerializedProduct {
+// Aceita a linha "enxuta" da vitrine (só as colunas do select de
+// listStorefrontProducts) — não carrega description (@db.Text), cost, barcode.
+export function serializeProduct(p: {
+  id: string
+  name: string
+  price: Prisma.Decimal | number
+  unit: Unit
+  imageUrl: string | null
+  isAvailable: boolean
+  categoryId: string | null
+  sortOrder: number
+}): SerializedProduct {
   return {
     id: p.id,
     name: p.name,
-    description: p.description,
     price: decimalToNumber(p.price),
     unit: p.unit,
     imageUrl: p.imageUrl,

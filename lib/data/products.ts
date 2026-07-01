@@ -22,13 +22,25 @@ type ProductWriteData = {
   barcode?: string | null
 }
 
-/** Vitrine: produtos públicos da loja (respeita showOutOfStock). */
+/** Vitrine: produtos públicos da loja (respeita showOutOfStock).
+ *  select mínimo — a vitrine não usa description(@db.Text)/cost/barcode, então
+ *  não os buscamos nem os enviamos no payload RSC ao cliente. */
 export function listStorefrontProducts(
   storeId: string,
   opts: { showOutOfStock: boolean },
 ) {
   return prisma.product.findMany({
     where: { storeId, ...(opts.showOutOfStock ? {} : { isAvailable: true }) },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      unit: true,
+      imageUrl: true,
+      isAvailable: true,
+      categoryId: true,
+      sortOrder: true,
+    },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   })
 }

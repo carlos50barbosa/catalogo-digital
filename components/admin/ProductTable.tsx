@@ -6,6 +6,7 @@ import { Pencil, Trash2, Plus, Search, Check, X } from 'lucide-react'
 import { ProductImage } from '@/components/ui/product-image'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
 import { formatBRL, UNIT_LABELS } from '@/lib/format'
 import {
   setAvailabilityAction,
@@ -42,6 +43,7 @@ export function ProductTable({ initial }: { initial: AdminProduct[] }) {
       if (!res.ok) {
         // reverte em caso de falha
         setRows((prev) => prev.map((r) => (r.id === id ? { ...r, isAvailable: !next } : r)))
+        toast.error(res.error ?? 'Não foi possível atualizar a disponibilidade.')
       }
     })
   }
@@ -59,8 +61,13 @@ export function ProductTable({ initial }: { initial: AdminProduct[] }) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, price: value } : r)))
     startTransition(async () => {
       const res = await updatePriceAction(id, value)
-      if (!res.ok && prevPrice !== undefined) {
-        setRows((prev) => prev.map((r) => (r.id === id ? { ...r, price: prevPrice } : r)))
+      if (res.ok) {
+        toast.success('Preço atualizado.')
+      } else {
+        if (prevPrice !== undefined) {
+          setRows((prev) => prev.map((r) => (r.id === id ? { ...r, price: prevPrice } : r)))
+        }
+        toast.error(res.error ?? 'Não foi possível atualizar o preço.')
       }
     })
   }
@@ -70,7 +77,12 @@ export function ProductTable({ initial }: { initial: AdminProduct[] }) {
     setRows((prev) => prev.filter((r) => r.id !== p.id))
     startTransition(async () => {
       const res = await deleteProductAction(p.id)
-      if (!res.ok) setRows((prev) => [...prev, p]) // restaura em caso de falha
+      if (res.ok) {
+        toast.success(`"${p.name}" excluído.`)
+      } else {
+        setRows((prev) => [...prev, p]) // restaura em caso de falha
+        toast.error(res.error ?? 'Não foi possível excluir o produto.')
+      }
     })
   }
 

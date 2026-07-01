@@ -25,6 +25,9 @@ module.exports = {
       max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
+        // Fuso do processo = Brasil, para datas de exibição (próxima cobrança etc.).
+        // A VPS roda em UTC; sem isto, horários apareceriam ~3h adiantados.
+        TZ: 'America/Sao_Paulo',
         // Next escuta nesta porta/host; o Nginx faz proxy reverso para cá.
         PORT: 3005,
         HOSTNAME: '127.0.0.1',

@@ -372,6 +372,10 @@ model Subscription {
   updatedAt             DateTime    @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  // O webhook resolve a loja por estes campos — hot path crítico de billing.
+  @@index([gatewaySubscriptionId])
+  @@index([gatewayCustomerId])
 }
 
 /// Log de auditoria/idempotência dos webhooks do gateway.
