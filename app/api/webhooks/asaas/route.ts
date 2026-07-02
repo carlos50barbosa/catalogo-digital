@@ -145,13 +145,32 @@ export async function POST(req: NextRequest) {
         }
         case 'PAYMENT_REFUNDED':
         case 'PAYMENT_CHARGEBACK_REQUESTED':
-        case 'PAYMENT_DELETED':
+        case 'PAYMENT_DELETED': {
+          // Só suspende se a cobrança for da PRÓPRIA assinatura da loja. Sem isso, um
+          // estorno/exclusão resolvido pelo CLIENTE (ex.: duas lojas que compartilham o
+          // mesmo customer Asaas por usarem o mesmo CPF) suspendia a loja errada — ao
+          // excluir uma loja, o Asaas dispara PAYMENT_DELETED e a "irmã" caía p/ SUSPENDED
+          // via o customer compartilhado. Mesma trava do PAYMENT_OVERDUE acima.
+          const sub = await tx.subscription.findUnique({
+            where: { storeId },
+            select: { gatewaySubscriptionId: true },
+          })
+          const paySub = payment?.subscription ?? null
+          if (!paySub || !sub?.gatewaySubscriptionId || paySub !== sub.gatewaySubscriptionId) {
+            console.warn(
+              `[webhook asaas] ${event} ignorado: cobrança ${payment?.id ?? '-'} ` +
+                `não é da assinatura da loja ${storeId} ` +
+                `(payload.subscription=${paySub ?? '-'}, loja.subscription=${sub?.gatewaySubscriptionId ?? '-'}).`,
+            )
+            return null
+          }
           await tx.subscription.updateMany({ where: { storeId }, data: { status: 'CANCELED' } })
           await tx.store.update({
             where: { id: storeId },
             data: { status: 'SUSPENDED', isActive: deriveIsActive('SUSPENDED') },
           })
           return null
+        }
         default:
           return null
       }
