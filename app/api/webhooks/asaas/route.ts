@@ -118,12 +118,31 @@ export async function POST(req: NextRequest) {
             ? { email: ownerEmail, name: store.name }
             : null
         }
-        case 'PAYMENT_OVERDUE':
+        case 'PAYMENT_OVERDUE': {
+          // Só rebaixa se a cobrança vencida for da PRÓPRIA assinatura da loja.
+          // Cobranças avulsas/duplicadas no mesmo cliente Asaas chegam sem
+          // `payment.subscription` (ou com outra assinatura) e eram resolvidas pelo
+          // cliente — derrubando para PAST_DUE lojas com a mensalidade em dia. Aqui
+          // exigimos que o vencido seja o da assinatura antes de rebaixar.
+          const sub = await tx.subscription.findUnique({
+            where: { storeId },
+            select: { gatewaySubscriptionId: true },
+          })
+          const paySub = payment?.subscription ?? null
+          if (!paySub || !sub?.gatewaySubscriptionId || paySub !== sub.gatewaySubscriptionId) {
+            console.warn(
+              `[webhook asaas] PAYMENT_OVERDUE ignorado: cobrança ${payment?.id ?? '-'} ` +
+                `não é da assinatura da loja ${storeId} ` +
+                `(payload.subscription=${paySub ?? '-'}, loja.subscription=${sub?.gatewaySubscriptionId ?? '-'}).`,
+            )
+            return null
+          }
           await tx.store.update({
             where: { id: storeId },
             data: { status: 'PAST_DUE', isActive: deriveIsActive('PAST_DUE') },
           })
           return null
+        }
         case 'PAYMENT_REFUNDED':
         case 'PAYMENT_CHARGEBACK_REQUESTED':
         case 'PAYMENT_DELETED':
