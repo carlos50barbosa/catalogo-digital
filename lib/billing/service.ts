@@ -103,6 +103,7 @@ export async function provisionSubscription(opts: {
             gatewayCustomerId: customer.id,
             gatewaySubscriptionId: sub.id,
             nextDueDate: sub.nextDueDate ? new Date(sub.nextDueDate) : new Date(nextDue),
+            cpfCnpj: cpf,
           },
           tx,
         )

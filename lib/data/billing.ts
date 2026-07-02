@@ -50,6 +50,7 @@ export async function upsertSubscription(
     gatewayCustomerId?: string | null
     gatewaySubscriptionId?: string | null
     nextDueDate?: Date | null
+    cpfCnpj?: string | null
   },
   db: Prisma.TransactionClient = prisma,
 ) {
@@ -64,6 +65,7 @@ export async function upsertSubscription(
       gatewayCustomerId: data.gatewayCustomerId ?? null,
       gatewaySubscriptionId: data.gatewaySubscriptionId ?? null,
       nextDueDate: data.nextDueDate ?? null,
+      cpfCnpj: data.cpfCnpj ?? null,
     },
     update: {
       plan: data.plan,
@@ -75,6 +77,7 @@ export async function upsertSubscription(
         ? { gatewaySubscriptionId: data.gatewaySubscriptionId }
         : {}),
       ...(data.nextDueDate !== undefined ? { nextDueDate: data.nextDueDate } : {}),
+      ...(data.cpfCnpj !== undefined ? { cpfCnpj: data.cpfCnpj } : {}),
     },
   })
 }

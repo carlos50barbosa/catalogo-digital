@@ -366,6 +366,7 @@ model Subscription {
   gateway               String      @default("asaas")
   gatewayCustomerId     String?
   gatewaySubscriptionId String?
+  cpfCnpj               String?     // documento do responsável (só dígitos); usado p/ sinalizar CPF repetido entre lojas
   plan                  Plan
   status                String      @default("PENDING") // espelha o status no gateway
   billingType           BillingType @default(UNDEFINED)
@@ -380,6 +381,7 @@ model Subscription {
   // O webhook resolve a loja por estes campos — hot path crítico de billing.
   @@index([gatewaySubscriptionId])
   @@index([gatewayCustomerId])
+  @@index([cpfCnpj]) // lookup de CPF repetido entre lojas no /admin-plataforma
 }
 
 /// Log de auditoria/idempotência dos webhooks do gateway.

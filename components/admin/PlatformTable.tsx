@@ -27,6 +27,8 @@ export type PlatformRow = {
   nextDueDate: string | null
   subValue: number | null
   hasSubscription: boolean
+  cpfCnpj: string | null
+  cpfShared: boolean
 }
 
 const STATUSES = ['PENDING', 'TRIALING', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CANCELED'] as const
@@ -109,6 +111,14 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
                     <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', statusTone(r.status))}>
                       {STATUS_LABELS[r.status]}
                     </span>
+                    {r.cpfShared && (
+                      <span
+                        title={r.cpfCnpj ? `CPF/CNPJ ${r.cpfCnpj} usado por mais de uma loja` : undefined}
+                        className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700"
+                      >
+                        CPF repetido
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-neutral-500">
                     /{r.slug}

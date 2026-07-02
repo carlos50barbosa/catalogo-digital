@@ -10,19 +10,31 @@ export default async function PlatformPage() {
   await requireSuperadmin()
   const [stores, stats] = await Promise.all([listAllStoresForPlatform(), platformStats()])
 
-  const rows: PlatformRow[] = stores.map((s) => ({
-    id: s.id,
-    name: s.name,
-    slug: s.slug,
-    plan: s.plan,
-    status: s.status,
-    productCount: s._count.products,
-    ownerEmail: s.users[0]?.email ?? null,
-    createdAt: s.createdAt.toISOString(),
-    nextDueDate: s.subscription?.nextDueDate ? s.subscription.nextDueDate.toISOString() : null,
-    subValue: s.subscription ? decimalToNumber(s.subscription.value) : null,
-    hasSubscription: !!s.subscription,
-  }))
+  // Conta quantas lojas usam cada CPF/CNPJ, para sinalizar repetição (não bloqueia).
+  const cpfCount = new Map<string, number>()
+  for (const s of stores) {
+    const c = s.subscription?.cpfCnpj
+    if (c) cpfCount.set(c, (cpfCount.get(c) ?? 0) + 1)
+  }
+
+  const rows: PlatformRow[] = stores.map((s) => {
+    const cpf = s.subscription?.cpfCnpj ?? null
+    return {
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      plan: s.plan,
+      status: s.status,
+      productCount: s._count.products,
+      ownerEmail: s.users[0]?.email ?? null,
+      createdAt: s.createdAt.toISOString(),
+      nextDueDate: s.subscription?.nextDueDate ? s.subscription.nextDueDate.toISOString() : null,
+      subValue: s.subscription ? decimalToNumber(s.subscription.value) : null,
+      hasSubscription: !!s.subscription,
+      cpfCnpj: cpf,
+      cpfShared: !!(cpf && (cpfCount.get(cpf) ?? 0) > 1),
+    }
+  })
 
   return (
     <div className="space-y-6">
