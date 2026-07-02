@@ -14,7 +14,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "create-store": "tsx scripts/create-store.ts",
     "asaas:test": "node --env-file=.env --import tsx scripts/asaas-sandbox-test.ts",
-    "fiado:dedupe": "node --env-file=.env --import tsx scripts/dedupe-fiado-reversals.ts"
+    "fiado:dedupe": "node --env-file=.env --import tsx scripts/dedupe-fiado-reversals.ts",
+    "backfill:cpfcnpj": "node --env-file=.env --import tsx scripts/backfill-cpfcnpj.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
