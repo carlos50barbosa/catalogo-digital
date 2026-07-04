@@ -46,9 +46,16 @@ export function SettingsForm({
   const [logoProcessing, setLogoProcessing] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const [accent, setAccent] = useState(initial.accentColor ?? '#16a34a')
+  // Loja que ainda NÃO configurou horários (openingHours null/vazio) começa com
+  // os dias ABERTOS e editáveis — senão os 7 dias nascem "Fechado" com os campos
+  // desabilitados (cinza) e o dono acha que "não dá pra alterar o horário".
+  const hoursConfigured =
+    !!initial.openingHours && Object.keys(initial.openingHours).length > 0
   const [closed, setClosed] = useState<Record<number, boolean>>(() => {
     const m: Record<number, boolean> = {}
-    for (let d = 0; d < 7; d++) m[d] = !initial.openingHours?.[String(d)]
+    for (let d = 0; d < 7; d++) {
+      m[d] = hoursConfigured ? !initial.openingHours?.[String(d)] : false
+    }
     return m
   })
 
@@ -265,6 +272,10 @@ export function SettingsForm({
           </div>
           <div className="space-y-2">
             <Label>Horário de funcionamento</Label>
+            <p className="text-xs text-neutral-400">
+              Desmarque <strong>Fechado</strong> no dia para definir o horário. Deixe todos fechados
+              para não exibir horário na loja.
+            </p>
             {WEEKDAY_LABELS.map((label, d) => {
               const today = initial.openingHours?.[String(d)]
               return (
