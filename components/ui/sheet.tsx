@@ -46,13 +46,14 @@ export function Sheet({
         aria-label={title}
         className={cn(
           'absolute flex flex-col bg-white shadow-sheet',
-          // mobile: bottom sheet
-          'inset-x-0 bottom-0 max-h-[92vh] rounded-t-2xl',
+          // mobile: bottom sheet. dvh (não vh) para respeitar a barra do
+          // navegador — com vh o topo (header/X) some atrás da URL bar no celular.
+          'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-2xl',
           // desktop: right drawer
           'sm:inset-y-0 sm:bottom-auto sm:left-auto sm:right-0 sm:h-full sm:w-[440px] sm:max-h-none sm:rounded-none',
         )}
       >
-        <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-3">
           <h2 className="font-display text-lg font-semibold text-neutral-900">{title}</h2>
           <button
             type="button"
@@ -64,7 +65,7 @@ export function Sheet({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto">{children}</div>
-        {footer && <div className="border-t border-neutral-200 p-4">{footer}</div>}
+        {footer && <div className="shrink-0 border-t border-neutral-200 p-4">{footer}</div>}
       </div>
     </div>
   )
