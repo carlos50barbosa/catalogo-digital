@@ -66,10 +66,12 @@ export function serializeCategory(c: Category): SerializedCategory {
 }
 
 // Aceita a linha "enxuta" da vitrine (só as colunas do select de
-// listStorefrontProducts) — não carrega description (@db.Text), cost, barcode.
+// listStorefrontProducts) — não carrega cost/barcode. description entra p/ o
+// detalhe do produto (pode vir undefined em callers que não a selecionam).
 export function serializeProduct(p: {
   id: string
   name: string
+  description?: string | null
   price: Prisma.Decimal | number
   unit: Unit
   imageUrl: string | null
@@ -80,6 +82,7 @@ export function serializeProduct(p: {
   return {
     id: p.id,
     name: p.name,
+    description: p.description ?? null,
     price: decimalToNumber(p.price),
     unit: p.unit,
     imageUrl: p.imageUrl,

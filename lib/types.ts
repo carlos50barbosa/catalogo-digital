@@ -42,6 +42,7 @@ export type SerializedCategory = {
 export type SerializedProduct = {
   id: string
   name: string
+  description: string | null
   price: number
   unit: Unit
   imageUrl: string | null

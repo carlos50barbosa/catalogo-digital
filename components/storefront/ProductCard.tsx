@@ -8,16 +8,28 @@ export function ProductCard({
   product,
   qtyInCart,
   onAdd,
+  onOpen,
 }: {
   product: SerializedProduct
   qtyInCart: number
   onAdd: () => void
+  onOpen: () => void
 }) {
   const unavailable = !product.isAvailable
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
+      aria-label={`Ver detalhes de ${product.name}`}
       className={cn(
-        'flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card',
+        'flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card transition hover:border-neutral-300 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
         unavailable && 'opacity-75',
       )}
     >
@@ -45,7 +57,10 @@ export function ProductCard({
           </p>
           <button
             type="button"
-            onClick={onAdd}
+            onClick={(e) => {
+              e.stopPropagation()
+              onAdd()
+            }}
             disabled={unavailable}
             aria-label={`Adicionar ${product.name} ao carrinho`}
             className={cn(

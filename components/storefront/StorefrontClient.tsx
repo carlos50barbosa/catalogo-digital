@@ -5,6 +5,7 @@ import { ShoppingCart, PackageOpen, SearchX, MapPin, Clock } from 'lucide-react'
 import { StoreHeader } from './StoreHeader'
 import { CategoryNav } from './CategoryNav'
 import { ProductCard } from './ProductCard'
+import { ProductSheet } from './ProductSheet'
 import { CartSheet } from './CartSheet'
 import { useCart } from './use-cart'
 import { formatBRL } from '@/lib/format'
@@ -33,6 +34,7 @@ export function StorefrontClient({
   const [query, setQuery] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [cartOpen, setCartOpen] = useState(false)
+  const [selected, setSelected] = useState<SerializedProduct | null>(null)
 
   const q = query.trim().toLowerCase()
   const searching = q.length > 0
@@ -107,7 +109,7 @@ export function StorefrontClient({
           />
         ) : flat ? (
           <section className="py-4">
-            <ProductGrid products={flat} qtyMap={qtyMap} onAdd={cart.add} />
+            <ProductGrid products={flat} qtyMap={qtyMap} onAdd={cart.add} onOpen={setSelected} />
           </section>
         ) : (
           <div className="py-4">
@@ -119,7 +121,12 @@ export function StorefrontClient({
                 >
                   {s.name}
                 </h2>
-                <ProductGrid products={s.products} qtyMap={qtyMap} onAdd={cart.add} />
+                <ProductGrid
+                  products={s.products}
+                  qtyMap={qtyMap}
+                  onAdd={cart.add}
+                  onOpen={setSelected}
+                />
               </section>
             ))}
           </div>
@@ -159,6 +166,13 @@ export function StorefrontClient({
         </div>
       )}
 
+      <ProductSheet
+        product={selected}
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        onAdd={cart.add}
+      />
+
       <CartSheet
         open={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -179,10 +193,12 @@ function ProductGrid({
   products,
   qtyMap,
   onAdd,
+  onOpen,
 }: {
   products: SerializedProduct[]
   qtyMap: Record<string, number>
   onAdd: (p: SerializedProduct) => void
+  onOpen: (p: SerializedProduct) => void
 }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -192,6 +208,7 @@ function ProductGrid({
           product={p}
           qtyInCart={qtyMap[p.id] ?? 0}
           onAdd={() => onAdd(p)}
+          onOpen={() => onOpen(p)}
         />
       ))}
     </div>

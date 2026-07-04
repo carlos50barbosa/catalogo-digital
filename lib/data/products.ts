@@ -23,8 +23,8 @@ type ProductWriteData = {
 }
 
 /** Vitrine: produtos públicos da loja (respeita showOutOfStock).
- *  select mínimo — a vitrine não usa description(@db.Text)/cost/barcode, então
- *  não os buscamos nem os enviamos no payload RSC ao cliente. */
+ *  select mínimo — a vitrine não usa cost/barcode, então não os buscamos nem os
+ *  enviamos no payload RSC ao cliente. description entra p/ o detalhe do produto. */
 export function listStorefrontProducts(
   storeId: string,
   opts: { showOutOfStock: boolean },
@@ -34,6 +34,7 @@ export function listStorefrontProducts(
     select: {
       id: true,
       name: true,
+      description: true,
       price: true,
       unit: true,
       imageUrl: true,
