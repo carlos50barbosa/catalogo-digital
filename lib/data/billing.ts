@@ -96,13 +96,15 @@ export function listAllStoresForPlatform() {
 }
 
 export async function platformStats() {
-  const [total, active, pastDue, suspended, activeSubs] = await Promise.all([
+  const [total, active, pastDue, suspended, activeSubs, viewsAgg] = await Promise.all([
     prisma.store.count(),
     prisma.store.count({ where: { status: 'ACTIVE' } }),
     prisma.store.count({ where: { status: 'PAST_DUE' } }),
     prisma.store.count({ where: { status: 'SUSPENDED' } }),
     prisma.subscription.findMany({ where: { store: { status: 'ACTIVE' } }, select: { value: true } }),
+    prisma.store.aggregate({ _sum: { viewCount: true } }),
   ])
   const mrr = activeSubs.reduce((s, x) => s + decimalToNumber(x.value), 0)
-  return { total, active, pastDue, suspended, mrr }
+  const totalViews = viewsAgg._sum.viewCount ?? 0
+  return { total, active, pastDue, suspended, mrr, totalViews }
 }

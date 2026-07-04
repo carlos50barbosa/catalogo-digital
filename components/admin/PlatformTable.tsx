@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ExternalLink, Trash2, CreditCard, Boxes, CalendarClock, Ban } from 'lucide-react'
+import { ExternalLink, Trash2, CreditCard, Boxes, CalendarClock, Ban, Eye } from 'lucide-react'
 import {
   overrideStatusAction,
   changePlanAction,
@@ -22,6 +22,7 @@ export type PlatformRow = {
   plan: 'ESSENCIAL' | 'PROFISSIONAL' | 'PREMIUM'
   status: 'PENDING' | 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED' | 'CANCELED'
   productCount: number
+  viewCount: number
   ownerEmail: string | null
   createdAt: string
   nextDueDate: string | null
@@ -138,6 +139,12 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-neutral-500">
                 <span className="flex items-center gap-1">
                   <Boxes className="h-3.5 w-3.5" /> {r.productCount} produtos
+                </span>
+                <span
+                  className="flex items-center gap-1"
+                  title="Visualizações da vitrine (exclui bots)"
+                >
+                  <Eye className="h-3.5 w-3.5" /> {r.viewCount.toLocaleString('pt-BR')} visualizações
                 </span>
                 <span className="flex items-center gap-1">
                   <CreditCard className="h-3.5 w-3.5" />

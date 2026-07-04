@@ -1,4 +1,4 @@
-import { Store, CheckCircle2, AlertTriangle, Ban, TrendingUp } from 'lucide-react'
+import { Store, CheckCircle2, AlertTriangle, Ban, TrendingUp, Eye } from 'lucide-react'
 import { requireSuperadmin } from '@/lib/auth-helpers'
 import { listAllStoresForPlatform, platformStats } from '@/lib/data/billing'
 import { decimalToNumber, formatBRL } from '@/lib/format'
@@ -26,6 +26,7 @@ export default async function PlatformPage() {
       plan: s.plan,
       status: s.status,
       productCount: s._count.products,
+      viewCount: s.viewCount,
       ownerEmail: s.users[0]?.email ?? null,
       createdAt: s.createdAt.toISOString(),
       nextDueDate: s.subscription?.nextDueDate ? s.subscription.nextDueDate.toISOString() : null,
@@ -43,12 +44,13 @@ export default async function PlatformPage() {
         <p className="text-sm text-neutral-500">Gestão de assinaturas e status de todas as lojas.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Stat icon={<Store className="h-5 w-5" />} value={String(stats.total)} label="lojas" />
         <Stat icon={<CheckCircle2 className="h-5 w-5" />} value={String(stats.active)} label="ativas" tone="green" />
         <Stat icon={<AlertTriangle className="h-5 w-5" />} value={String(stats.pastDue)} label="em atraso" tone="amber" />
         <Stat icon={<Ban className="h-5 w-5" />} value={String(stats.suspended)} label="suspensas" tone="red" />
         <Stat icon={<TrendingUp className="h-5 w-5" />} value={formatBRL(stats.mrr)} label="MRR estimado" tone="green" />
+        <Stat icon={<Eye className="h-5 w-5" />} value={stats.totalViews.toLocaleString('pt-BR')} label="visualizações" />
       </div>
 
       <PlatformTable rows={rows} />

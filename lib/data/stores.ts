@@ -45,6 +45,14 @@ export async function countProducts(storeId: string) {
   return prisma.product.count({ where: { storeId } })
 }
 
+/** Incrementa o contador de visualizações da vitrine (fire-and-forget na página). */
+export async function incrementStoreView(storeId: string): Promise<void> {
+  await prisma.store.update({
+    where: { id: storeId },
+    data: { viewCount: { increment: 1 } },
+  })
+}
+
 /** Atualiza dados de marca/identidade da loja. */
 export async function updateStoreProfile(
   storeId: string,

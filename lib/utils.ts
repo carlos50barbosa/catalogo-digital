@@ -6,6 +6,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Bots comuns (crawlers de busca + previews de link) — não contam como
+// visualização real da vitrine. Heurística leve por user-agent.
+const BOT_UA_RE =
+  /bot|crawler|spider|crawling|slurp|bingpreview|facebookexternalhit|whatsapp|telegrambot|discordbot|preview|headless|lighthouse|pingdom|uptimerobot|monitor|curl|wget|python-requests|axios|got|node-fetch/i
+
+/** True se o user-agent parece um bot/crawler/preview (não é visita humana). */
+export function isBotUserAgent(ua: string | null | undefined): boolean {
+  if (!ua) return true // sem UA => quase sempre bot/script; não conta
+  return BOT_UA_RE.test(ua)
+}
+
 /**
  * URL para renderizar uma imagem enviada. Os arquivos são gravados em UPLOAD_DIR e
  * a rota /api/uploads (servida pelo PRÓPRIO app) os entrega de forma consistente.

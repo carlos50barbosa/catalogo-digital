@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { getStoreBySlug } from '@/lib/data/stores'
+import { getStoreBySlug, incrementStoreView } from '@/lib/data/stores'
 import { listCategories } from '@/lib/data/categories'
 import { listStorefrontProducts } from '@/lib/data/products'
 import {
@@ -11,7 +12,7 @@ import {
 } from '@/lib/serialize'
 import { getOpenStatus } from '@/lib/store-hours'
 import { isStorePublic, isSuspended } from '@/lib/store-status'
-import { safeHexColor, uploadSrc } from '@/lib/utils'
+import { safeHexColor, uploadSrc, isBotUserAgent } from '@/lib/utils'
 import { config } from '@/lib/config'
 import { StorefrontClient } from '@/components/storefront/StorefrontClient'
 import { StoreUnavailable } from '@/components/storefront/StoreUnavailable'
@@ -57,6 +58,11 @@ export default async function StorefrontPage({
   if (!store) notFound()
   if (isSuspended(store.status)) return <StoreUnavailable name={store.name} />
   if (!isStorePublic(store.status, store.published)) notFound() // PENDING/CANCELED/não publicada
+
+  // Conta a visualização da vitrine (só visita humana). Fire-and-forget: não
+  // adiciona latência nem quebra a página se a escrita falhar.
+  const ua = (await headers()).get('user-agent')
+  if (!isBotUserAgent(ua)) void incrementStoreView(store.id).catch(() => {})
 
   const settings = serializeSettings(store.settings)
   const [cats, prods] = await Promise.all([
