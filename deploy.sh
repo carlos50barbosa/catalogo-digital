@@ -16,10 +16,22 @@
 #     rodar a partir da pasta de release, não da raiz do projeto.
 #   - ecosystem.config.js com script = "$CURRENT_LINK/server.js".
 #
-# Uso:   ./deploy.sh            (git pull + migrate + build + release + reload)
-#        ./deploy.sh --no-pull  (não roda git pull)
+# Uso:   ./deploy.sh                (git pull + migrate + build + release + reload)
+#        ./deploy.sh --no-pull      (não roda git pull)
+#        ./deploy.sh --no-migrate   (não roda prisma migrate deploy)
+#        (flags combináveis, em qualquer ordem)
 #
 set -euo pipefail
+
+DO_PULL=1
+DO_MIGRATE=1
+for arg in "$@"; do
+  case "$arg" in
+    --no-pull) DO_PULL=0 ;;
+    --no-migrate) DO_MIGRATE=0 ;;
+    *) echo "!! opção desconhecida: $arg (use --no-pull e/ou --no-migrate)" >&2; exit 1 ;;
+  esac
+done
 
 PROJECT_DIR="${PROJECT_DIR:-/var/www/catalogo-digital}"
 RELEASES_DIR="${RELEASES_DIR:-/var/www/catalogo-releases}"
@@ -32,7 +44,7 @@ echo "==> Catálogo Digital — deploy atômico"
 
 [ -f .env ] || { echo "!! .env não encontrado em $PROJECT_DIR" >&2; exit 1; }
 
-if [ "${1:-}" != "--no-pull" ] && [ -d .git ]; then
+if [ "$DO_PULL" = 1 ] && [ -d .git ]; then
   echo "==> git pull"
   git pull --ff-only
 fi
@@ -40,8 +52,12 @@ fi
 echo "==> npm ci"
 npm ci
 
-echo "==> prisma migrate deploy"
-npx prisma migrate deploy
+if [ "$DO_MIGRATE" = 1 ]; then
+  echo "==> prisma migrate deploy"
+  npx prisma migrate deploy
+else
+  echo "==> pulando migrations (--no-migrate)"
+fi
 
 echo "==> next build (gera .next/standalone + copia static/public)"
 npm run build
