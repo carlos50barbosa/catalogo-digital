@@ -15,6 +15,7 @@ import {
   QrCode,
   CreditCard,
   NotebookPen,
+  BarChart3,
   Rocket,
   Lock,
 } from 'lucide-react'
@@ -28,6 +29,7 @@ const NAV = [
   { href: '/painel/categorias', label: 'Categorias', icon: Tags },
   { href: '/painel/clientes', label: 'Clientes', icon: Users },
   { href: '/painel/fiado', label: 'Fiado', icon: NotebookPen },
+  { href: '/painel/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/painel/importar', label: 'Importar', icon: Upload },
   { href: '/painel/divulgacao', label: 'Divulgação', icon: QrCode },
   { href: '/painel/assinatura', label: 'Meu plano', icon: CreditCard },
@@ -48,6 +50,7 @@ const LOCKED_HREFS = new Set([
   '/painel/pedidos',
   '/painel/clientes',
   '/painel/fiado',
+  '/painel/relatorios',
   '/painel/divulgacao',
 ])
 

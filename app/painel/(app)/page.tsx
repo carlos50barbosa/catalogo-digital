@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Receipt,
   NotebookPen,
+  BarChart3,
 } from 'lucide-react'
 import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getStoreForPanel, countProducts } from '@/lib/data/stores'
@@ -26,6 +27,7 @@ const SHORTCUTS = [
   { href: '/painel/produtos', label: 'Produtos', desc: 'Cadastre e edite', icon: Package },
   { href: '/painel/clientes', label: 'Clientes', desc: 'Sua base de clientes', icon: Users },
   { href: '/painel/fiado', label: 'Fiado', desc: 'Caderneta digital', icon: NotebookPen },
+  { href: '/painel/relatorios', label: 'Relatórios', desc: 'Vendas, produtos e lucro', icon: BarChart3 },
   { href: '/painel/categorias', label: 'Categorias', desc: 'Organize o catálogo', icon: Tags },
   { href: '/painel/divulgacao', label: 'Divulgação', desc: 'QR Code da loja', icon: QrCode },
   { href: '/painel/importar', label: 'Importar XML/CSV', desc: 'Nota fiscal ou planilha', icon: Upload },
