@@ -13,7 +13,7 @@ import { Select } from '@/components/ui/select'
 import { Label, FieldError } from '@/components/ui/label'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { WEEKDAY_LABELS } from '@/lib/store-hours'
-import { uploadSrc } from '@/lib/utils'
+import { uploadSrc, formatBrPhone } from '@/lib/utils'
 import type { Fulfillment, OpeningHours } from '@/lib/types'
 
 export type SettingsInitial = {
@@ -46,6 +46,7 @@ export function SettingsForm({
   const [logoProcessing, setLogoProcessing] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const [accent, setAccent] = useState(initial.accentColor ?? '#16a34a')
+  const [whatsapp, setWhatsapp] = useState(() => formatBrPhone(initial.whatsappNumber))
   // Loja que ainda NÃO configurou horários (openingHours null/vazio) começa com
   // os dias ABERTOS e editáveis — senão os 7 dias nascem "Fechado" com os campos
   // desabilitados (cinza) e o dono acha que "não dá pra alterar o horário".
@@ -156,9 +157,12 @@ export function SettingsForm({
               <Input
                 id="whatsappNumber"
                 name="whatsappNumber"
-                defaultValue={initial.whatsappNumber}
-                placeholder="82988887777"
+                type="tel"
                 inputMode="numeric"
+                maxLength={15}
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(formatBrPhone(e.target.value))}
+                placeholder="(82) 98888-7777"
                 required
               />
               <p className="mt-1 text-xs text-neutral-400">

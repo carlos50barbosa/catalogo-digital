@@ -9,7 +9,7 @@ import { Label, FieldError } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { formatBRL } from '@/lib/format'
 import { createOrderAction } from '@/app/_actions/checkout'
-import { cn } from '@/lib/utils'
+import { cn, formatBrPhone } from '@/lib/utils'
 import type { CartItem, SerializedSettings, SerializedStore } from '@/lib/types'
 
 type FulfillmentType = 'DELIVERY' | 'PICKUP'
@@ -144,9 +144,10 @@ export function CheckoutForm({
             <Input
               id="co-phone"
               type="tel"
-              inputMode="tel"
+              inputMode="numeric"
+              maxLength={15}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(formatBrPhone(e.target.value))}
               placeholder="(82) 99999-9999"
             />
             <FieldError message={errors.phone || errors.customerPhone} />

@@ -63,6 +63,21 @@ export function normalizeBrWhatsapp(raw: string | null | undefined): string {
   return d
 }
 
+/**
+ * Máscara de digitação para telefone/WhatsApp BR: (00) 00000-0000.
+ * Exibe só DDD + número — se vier com o DDI 55 (12/13 dígitos), remove para exibir.
+ * O 55 volta a ser adicionado no envio por normalizeBrWhatsapp.
+ */
+export function formatBrPhone(raw: string | null | undefined): string {
+  let d = (raw ?? '').replace(/\D/g, '')
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2)
+  d = d.slice(0, 11)
+  if (d.length <= 2) return d ? `(${d}` : ''
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+}
+
 /** Inverso do anterior, para EXIBIR no formulário: remove o 55 do início (DDD + número). */
 export function stripBrDdi(num: string | null | undefined): string {
   const d = (num ?? '').replace(/\D/g, '')

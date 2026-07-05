@@ -7,12 +7,13 @@ import { initialActionState } from '@/lib/action-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label, FieldError } from '@/components/ui/label'
-import { slugify } from '@/lib/utils'
+import { slugify, formatBrPhone } from '@/lib/utils'
 
 export function CadastroForm() {
   const [state, formAction, pending] = useActionState(signupAction, initialActionState)
   const [storeName, setStoreName] = useState('')
   const [slug, setSlug] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
 
   const previewSlug = (slug ? slugify(slug) : slugify(storeName)) || 'sua-loja'
 
@@ -70,12 +71,16 @@ export function CadastroForm() {
           <Input
             id="whatsapp"
             name="whatsapp"
+            type="tel"
             inputMode="numeric"
             required
-            placeholder="82988887777"
+            maxLength={15}
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(formatBrPhone(e.target.value))}
+            placeholder="(82) 98888-7777"
           />
           <p className="mt-1 text-xs text-neutral-400">
-            Só o DDD e o número — o 55 do Brasil entra automático. Ex.: 82988887777
+            Só o DDD e o número — o 55 do Brasil entra automático.
           </p>
           <FieldError message={state.fieldErrors?.whatsapp} />
         </div>
