@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -18,7 +19,9 @@ import {
   BarChart3,
   Rocket,
   Lock,
+  MoreHorizontal,
 } from 'lucide-react'
+import { Sheet } from '@/components/ui/sheet'
 import { LogoutButton } from './LogoutButton'
 import { cn } from '@/lib/utils'
 
@@ -75,6 +78,7 @@ export function AdminShell({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + '/')
 
@@ -87,6 +91,10 @@ export function AdminShell({
       )
     : NAV
   const primarySet = locked ? PRIMARY_LOCKED : PRIMARY
+
+  // Mobile: 4 abas principais + botão "Mais" (que abre o menu completo).
+  const mobileTabs = navItems.filter((item) => primarySet.has(item.href)).slice(0, 4)
+  const onMoreSection = !mobileTabs.some((item) => isActive(item.href, item.exact))
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -162,38 +170,91 @@ export function AdminShell({
         <div className="mx-auto max-w-4xl">{children}</div>
       </main>
 
-      {/* Bottom nav (mobile) */}
+      {/* Bottom nav (mobile): 4 abas + "Mais" */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white lg:hidden">
         <ul className="grid grid-cols-5">
-          {navItems
-            .filter((item) => primarySet.has(item.href))
-            .map((item) => {
-              const itemLocked = locked && LOCKED_HREFS.has(item.href)
-              const active = isActive(item.href, item.exact)
-              return (
-                <li key={item.href}>
-                  {itemLocked ? (
-                    <span className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-neutral-300">
-                      <item.icon className="h-5 w-5" />
-                      {item.label}
-                    </span>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        'flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium',
-                        active ? 'text-green-700' : 'text-neutral-500',
-                      )}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.label}
-                    </Link>
-                  )}
-                </li>
-              )
-            })}
+          {mobileTabs.map((item) => {
+            const itemLocked = locked && LOCKED_HREFS.has(item.href)
+            const active = isActive(item.href, item.exact)
+            return (
+              <li key={item.href}>
+                {itemLocked ? (
+                  <span className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-neutral-300">
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </span>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium',
+                      active ? 'text-green-700' : 'text-neutral-500',
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            )
+          })}
+          <li>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              className={cn(
+                'flex w-full flex-col items-center gap-0.5 py-2 text-[11px] font-medium',
+                onMoreSection ? 'text-green-700' : 'text-neutral-500',
+              )}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+              Mais
+            </button>
+          </li>
         </ul>
       </nav>
+
+      {/* Menu completo (mobile) — abre pelo "Mais" */}
+      <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="Menu">
+        <nav className="p-2">
+          {navItems.map((item) => {
+            const itemLocked = locked && LOCKED_HREFS.has(item.href)
+            const active = isActive(item.href, item.exact)
+            return itemLocked ? (
+              <span
+                key={item.href}
+                title="Disponível depois de publicar a loja"
+                className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-neutral-300"
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="flex-1">{item.label}</span>
+                <Lock className="h-3.5 w-3.5" />
+              </span>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition',
+                  active ? 'bg-green-50 text-green-700' : 'text-neutral-700 hover:bg-neutral-100',
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            )
+          })}
+          <Link
+            href={`/${storeSlug}`}
+            target="_blank"
+            onClick={() => setMoreOpen(false)}
+            className="mt-1 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            <ExternalLink className="h-5 w-5" /> Ver minha loja
+          </Link>
+        </nav>
+      </Sheet>
     </div>
   )
 }

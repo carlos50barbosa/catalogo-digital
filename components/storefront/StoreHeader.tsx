@@ -63,9 +63,14 @@ export function StoreHeader({
                   <Clock className="h-3 w-3" aria-hidden /> Aberto
                 </Badge>
               ) : (
-                <Badge tone="neutral">
-                  <Clock className="h-3 w-3" aria-hidden /> Fechado
-                </Badge>
+                <span className="inline-flex items-center gap-1.5">
+                  <Badge tone="neutral">
+                    <Clock className="h-3 w-3" aria-hidden /> Fechado
+                  </Badge>
+                  {openStatus.nextOpen && (
+                    <span className="text-xs text-neutral-500">abre {openStatus.nextOpen}</span>
+                  )}
+                </span>
               )}
               {openStatus.isOpen !== null && <FulfillmentBadge fulfillment={settings.fulfillment} />}
             </div>

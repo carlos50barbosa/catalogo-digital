@@ -13,6 +13,10 @@ import {
 import { STATUS_LABELS } from '@/lib/store-status'
 import { PLANS, ORDERED_PLANS } from '@/lib/plans'
 import { formatBRL, formatDateTimeBR } from '@/lib/format'
+import { Modal } from '@/components/ui/modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { toast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
 
 export type PlatformRow = {
@@ -65,12 +69,20 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
   const [filter, setFilter] = useState<string>('all')
   const [pending, startTransition] = useTransition()
 
+  // Modais (substituem window.prompt/confirm/alert).
+  const [subscribeFor, setSubscribeFor] = useState<PlatformRow | null>(null)
+  const [cancelFor, setCancelFor] = useState<PlatformRow | null>(null)
+  const [deleteFor, setDeleteFor] = useState<PlatformRow | null>(null)
+  const [cpfInput, setCpfInput] = useState('')
+  const [deleteInput, setDeleteInput] = useState('')
+
   const filtered = filter === 'all' ? rows : rows.filter((r) => r.status === filter)
 
-  function run(fn: () => Promise<{ ok: boolean; error?: string }>) {
+  function run(fn: () => Promise<{ ok: boolean; error?: string }>, successMsg?: string) {
     startTransition(async () => {
       const res = await fn()
-      if (!res.ok && res.error) alert(res.error)
+      if (!res.ok && res.error) toast.error(res.error)
+      else if (res.ok && successMsg) toast.success(successMsg)
       router.refresh()
     })
   }
@@ -192,10 +204,8 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
                   <button
                     type="button"
                     onClick={() => {
-                      const doc = prompt(
-                        'CPF/CNPJ do responsável (obrigatório para cobrar no Asaas).\nDeixe em branco para criar só localmente:',
-                      )
-                      run(() => createSubscriptionAction(r.id, r.plan, 'PIX', doc ?? undefined))
+                      setCpfInput('')
+                      setSubscribeFor(r)
                     }}
                     className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-medium text-accent-fg hover:opacity-90"
                   >
@@ -205,10 +215,7 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm(`Cancelar a assinatura de "${r.name}"? A loja vai para CANCELED.`))
-                      run(() => cancelSubscriptionAction(r.id))
-                  }}
+                  onClick={() => setCancelFor(r)}
                   className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50"
                 >
                   <Ban className="h-4 w-4" /> Cancelar
@@ -217,12 +224,8 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
                 <button
                   type="button"
                   onClick={() => {
-                    const typed = prompt(
-                      `EXCLUIR "${r.name}" apaga DEFINITIVAMENTE todos os dados (produtos, pedidos, clientes, fiado) e a conta. Não dá para desfazer.\n\nDigite o nome da loja para confirmar:`,
-                    )
-                    if (typed === null) return
-                    if (typed.trim() === r.name) run(() => deleteStoreAction(r.id))
-                    else alert('Nome não confere. Exclusão cancelada.')
+                    setDeleteInput('')
+                    setDeleteFor(r)
                   }}
                   className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-medium text-white hover:bg-red-700"
                 >
@@ -233,6 +236,121 @@ export function PlatformTable({ rows }: { rows: PlatformRow[] }) {
           ))}
         </ul>
       )}
+
+      {/* Criar assinatura */}
+      <Modal
+        open={!!subscribeFor}
+        onClose={() => setSubscribeFor(null)}
+        title="Criar assinatura"
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => setSubscribeFor(null)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              loading={pending}
+              onClick={() => {
+                const store = subscribeFor
+                if (!store) return
+                setSubscribeFor(null)
+                run(
+                  () =>
+                    createSubscriptionAction(store.id, store.plan, 'PIX', cpfInput.trim() || undefined),
+                  'Assinatura criada.',
+                )
+              }}
+            >
+              Criar
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-neutral-600">
+          CPF/CNPJ do responsável — obrigatório para cobrar no Asaas. Deixe em branco para criar só
+          localmente.
+        </p>
+        <Input
+          value={cpfInput}
+          onChange={(e) => setCpfInput(e.target.value)}
+          placeholder="CPF ou CNPJ (opcional)"
+          inputMode="numeric"
+          className="mt-3"
+        />
+      </Modal>
+
+      {/* Cancelar assinatura */}
+      <Modal
+        open={!!cancelFor}
+        onClose={() => setCancelFor(null)}
+        title="Cancelar assinatura"
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => setCancelFor(null)}>
+              Voltar
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              loading={pending}
+              onClick={() => {
+                const store = cancelFor
+                if (!store) return
+                setCancelFor(null)
+                run(() => cancelSubscriptionAction(store.id), 'Assinatura cancelada.')
+              }}
+            >
+              Cancelar assinatura
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-neutral-600">
+          Cancelar a assinatura de <strong>{cancelFor?.name}</strong>? A loja vai para{' '}
+          <strong>CANCELED</strong>.
+        </p>
+      </Modal>
+
+      {/* Excluir loja */}
+      <Modal
+        open={!!deleteFor}
+        onClose={() => setDeleteFor(null)}
+        title="Excluir loja"
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => setDeleteFor(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              loading={pending}
+              disabled={deleteInput.trim() !== deleteFor?.name}
+              onClick={() => {
+                const store = deleteFor
+                if (!store || deleteInput.trim() !== store.name) return
+                setDeleteFor(null)
+                run(() => deleteStoreAction(store.id), 'Loja excluída.')
+              }}
+            >
+              Excluir definitivamente
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-neutral-600">
+          Isto apaga <strong>DEFINITIVAMENTE</strong> todos os dados de{' '}
+          <strong>{deleteFor?.name}</strong> (produtos, pedidos, clientes, fiado) e a conta. Não dá
+          para desfazer.
+        </p>
+        <p className="mt-3 text-sm text-neutral-600">Digite o nome da loja para confirmar:</p>
+        <Input
+          value={deleteInput}
+          onChange={(e) => setDeleteInput(e.target.value)}
+          placeholder={deleteFor?.name}
+          className="mt-1"
+        />
+      </Modal>
     </div>
   )
 }

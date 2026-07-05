@@ -16,7 +16,12 @@ export type OpenStatus = {
   todayLabel: string
   /** Horário de hoje, se houver, no formato "08:00 - 18:00". */
   todayHours: string | null
+  /** Quando a loja abre a seguir, ex.: "hoje 14:00" / "amanhã 08:00" / "seg. 08:00".
+   *  null se aberta agora ou sem horários configurados. */
+  nextOpen: string | null
 }
+
+const WEEKDAY_SHORT = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'] as const
 
 /** Fuso de referência da operação (Brasil). O horário Aberto/Fechado é sempre
  *  calculado neste fuso, independente do fuso do processo (a VPS roda em UTC). */
@@ -61,6 +66,29 @@ function toMinutes(hhmm: string | undefined): number | null {
 }
 
 /**
+ * Próxima abertura da loja a partir de agora, como rótulo curto
+ * ("hoje 14:00" / "amanhã 08:00" / "seg. 08:00"). null se não houver.
+ */
+function findNextOpen(
+  openingHours: OpeningHours,
+  dow: number,
+  cur: number,
+): string | null {
+  for (let i = 0; i < 8; i++) {
+    const d = (dow + i) % 7
+    const slot = openingHours[String(d)]
+    if (!slot || !slot.open) continue
+    const openMin = toMinutes(slot.open)
+    if (openMin == null) continue
+    if (i === 0 && cur >= openMin) continue // hoje o horário de abrir já passou
+    if (i === 0) return `hoje ${slot.open}`
+    if (i === 1) return `amanhã ${slot.open}`
+    return `${WEEKDAY_SHORT[d]} ${slot.open}`
+  }
+  return null
+}
+
+/**
  * Calcula se a loja está aberta agora com base em openingHours.
  * Tolerante a dados ausentes/malformados (nesses casos retorna isOpen=null).
  */
@@ -72,19 +100,24 @@ export function getOpenStatus(
   const todayLabel = WEEKDAY_LABELS[dow]
 
   if (!openingHours || typeof openingHours !== 'object') {
-    return { isOpen: null, todayLabel, todayHours: null }
+    return { isOpen: null, todayLabel, todayHours: null, nextOpen: null }
   }
 
   const today = openingHours[String(dow)]
   if (!today || !today.open || !today.close) {
     // Dia sem expediente configurado => fechado hoje.
-    return { isOpen: false, todayLabel, todayHours: null }
+    return {
+      isOpen: false,
+      todayLabel,
+      todayHours: null,
+      nextOpen: findNextOpen(openingHours, dow, cur),
+    }
   }
 
   const open = toMinutes(today.open)
   const close = toMinutes(today.close)
   if (open == null || close == null) {
-    return { isOpen: null, todayLabel, todayHours: null }
+    return { isOpen: null, todayLabel, todayHours: null, nextOpen: null }
   }
 
   // `cur` já vem em minutos no fuso da loja (partsInStoreTz).
@@ -95,5 +128,6 @@ export function getOpenStatus(
     isOpen,
     todayLabel,
     todayHours: `${today.open} - ${today.close}`,
+    nextOpen: isOpen ? null : findNextOpen(openingHours, dow, cur),
   }
 }
