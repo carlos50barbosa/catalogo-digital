@@ -37,7 +37,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
   },
   PROFISSIONAL: {
     label: 'Profissional',
-    resumo: 'O mais escolhido pelos mercadinhos.',
+    resumo: 'O mais escolhido pelas lojas.',
     maxProducts: null,
     ofertasEnabled: true,
     customBranding: 'full',

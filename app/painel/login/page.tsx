@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Store } from 'lucide-react'
 import { auth } from '@/auth'
 import { LoginForm } from '@/components/admin/LoginForm'
 
@@ -27,9 +26,14 @@ export default async function LoginPage({
     <main className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-green-600 text-white">
-            <Store className="h-6 w-6" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/logo-mark.svg"
+            alt="Catálogo Digital"
+            width={48}
+            height={48}
+            className="mx-auto mb-4 h-12 w-12"
+          />
           <h1 className="font-display text-2xl font-bold text-neutral-900">Painel da loja</h1>
           <p className="mt-1 text-sm text-neutral-500">Entre para gerenciar seu catálogo.</p>
         </div>

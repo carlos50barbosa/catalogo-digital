@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   // Sem isto, o Next usa http://localhost:<porta> e as imagens de compartilhamento saem erradas.
   metadataBase: new URL(config.appUrl),
   title: 'Catálogo Digital',
-  description: 'Vitrine digital e pedidos por WhatsApp para mercadinhos de bairro.',
+  description: 'Vitrine digital e pedidos por WhatsApp para o seu negócio.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

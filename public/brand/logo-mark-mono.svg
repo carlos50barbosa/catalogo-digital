@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Catálogo Digital">
+  <!-- versão branca para fundos escuros/verdes (header do painel, e-mail).
+       A vitrine é vazada (deixa o fundo aparecer). -->
+  <g fill="#ffffff">
+    <!-- corpo com a vitrine vazada (fill-rule evenodd cria o buraco) -->
+    <path fill-rule="evenodd" d="M178 196 H334 A14 14 0 0 1 348 210 V346 A14 14 0 0 1 334 360 H178 A14 14 0 0 1 164 346 V210 A14 14 0 0 1 178 196 Z
+                                 M206 240 H306 A8 8 0 0 1 314 248 V318 A8 8 0 0 1 306 326 H206 A8 8 0 0 1 198 318 V248 A8 8 0 0 1 206 240 Z"/>
+    <!-- toldo -->
+    <path d="M156 150 H356 L372 196
+             Q348.8 218 325.6 196
+             Q302.4 218 279.2 196
+             Q256 218 232.8 196
+             Q209.6 218 186.4 196
+             Q163.2 218 140 196 Z"/>
+  </g>
+</svg>

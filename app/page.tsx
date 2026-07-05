@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import {
-  Store,
   Smartphone,
   MessageCircle,
   ReceiptText,
@@ -11,13 +10,13 @@ import {
 
 // Página raiz / landing pública. Apresenta as principais funcionalidades do SaaS.
 export const metadata = {
-  title: 'Catálogo Digital — Vitrine e pedidos por WhatsApp para mercadinhos',
+  title: 'Catálogo Digital — Vitrine e pedidos por WhatsApp para o seu negócio',
   description:
-    'Monte a vitrine digital do seu mercadinho e venda pelo WhatsApp, sem comissão de marketplace. Importe produtos pela nota fiscal, controle o fiado e divulgue com QR Code.',
+    'Monte a vitrine digital da sua loja e venda pelo WhatsApp, sem comissão de marketplace. Importe produtos pela nota fiscal, controle o fiado e divulgue com QR Code.',
   openGraph: {
     title: 'Catálogo Digital — Vitrine e pedidos por WhatsApp',
     description:
-      'Vitrine digital + pedidos por WhatsApp para mercadinhos de bairro, sem comissão de marketplace.',
+      'Vitrine digital + pedidos por WhatsApp para o seu negócio, sem comissão de marketplace.',
     type: 'website',
   },
 }
@@ -63,14 +62,13 @@ export default function HomePage() {
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 py-16">
         {/* Hero */}
         <div className="flex flex-col items-center text-center">
-          <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-green-600 text-white">
-            <Store className="h-7 w-7" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-mark.svg" alt="Catálogo Digital" width={56} height={56} className="mb-6 h-14 w-14" />
           <h1 className="font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
             Catálogo Digital
           </h1>
           <p className="mt-3 max-w-xl text-neutral-600">
-            Vitrine digital + pedidos por WhatsApp para mercadinhos de bairro. Tudo o que a sua loja
+            Vitrine digital + pedidos por WhatsApp para o seu negócio. Tudo o que a sua loja
             precisa para vender online — <strong>sem comissão de marketplace</strong>.
           </p>
 
@@ -96,7 +94,7 @@ export default function HomePage() {
             Tudo no mesmo lugar
           </h2>
           <p className="mx-auto mt-1 max-w-lg text-center text-sm text-neutral-500">
-            Do catálogo ao recebimento, com as ferramentas do dia a dia do mercadinho.
+            Do catálogo ao recebimento, com as ferramentas do dia a dia do seu negócio.
           </p>
 
           <div className="mt-8 grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">

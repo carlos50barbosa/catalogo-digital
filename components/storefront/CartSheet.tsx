@@ -69,7 +69,7 @@ export function CartSheet({
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
               No computador, abre o <strong>WhatsApp Web</strong>. A mensagem é editável antes de
-              enviar. O pagamento (inclusive PIX) é confirmado pelo mercadinho.
+              enviar. O pagamento (inclusive PIX) é confirmado pela loja.
             </span>
           </div>
           {waUrl && (

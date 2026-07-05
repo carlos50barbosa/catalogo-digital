@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Store, ShieldCheck, Wrench, MessageCircle } from 'lucide-react'
+import { ShieldCheck, Wrench, MessageCircle } from 'lucide-react'
 import { CadastroForm } from '@/components/signup/CadastroForm'
 
 export const metadata: Metadata = {
@@ -20,12 +20,17 @@ export default function CadastroPage() {
     <main className="min-h-screen bg-neutral-50 px-4 py-10">
       <div className="mx-auto max-w-xl">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-green-600 text-white">
-            <Store className="h-6 w-6" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/logo-mark.svg"
+            alt="Catálogo Digital"
+            width={48}
+            height={48}
+            className="mx-auto mb-3 h-12 w-12"
+          />
           <h1 className="font-display text-2xl font-bold text-neutral-900">Crie sua loja digital</h1>
           <p className="mt-1 text-neutral-500">
-            Em poucos minutos seu mercadinho vende pelo WhatsApp.
+            Em poucos minutos sua loja vende pelo WhatsApp.
           </p>
         </div>
 

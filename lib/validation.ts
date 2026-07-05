@@ -80,7 +80,7 @@ export const passwordResetSchema = z.object({
 
 export const signupSchema = z.object({
   ownerName: z.string().min(1, 'Informe seu nome').max(120),
-  storeName: z.string().min(1, 'Informe o nome do mercadinho').max(120),
+  storeName: z.string().min(1, 'Informe o nome da loja').max(120),
   whatsapp: z
     .string()
     .min(10, 'WhatsApp incompleto')

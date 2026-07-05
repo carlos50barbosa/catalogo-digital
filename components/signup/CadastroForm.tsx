@@ -31,14 +31,14 @@ export function CadastroForm() {
           <FieldError message={state.fieldErrors?.ownerName} />
         </div>
         <div>
-          <Label htmlFor="storeName">Nome do mercadinho</Label>
+          <Label htmlFor="storeName">Nome da loja</Label>
           <Input
             id="storeName"
             name="storeName"
             required
             value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
-            placeholder="Ex.: Mercadinho do Zé"
+            placeholder="Ex.: Loja do Zé"
           />
           <FieldError message={state.fieldErrors?.storeName} />
         </div>

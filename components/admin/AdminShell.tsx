@@ -10,7 +10,6 @@ import {
   Upload,
   Settings,
   ExternalLink,
-  Store as StoreIcon,
   ShoppingBag,
   Users,
   QrCode,
@@ -101,9 +100,8 @@ export function AdminShell({
       {/* Sidebar (desktop) */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-neutral-200 bg-white p-4 lg:flex">
         <div className="mb-6 flex items-center gap-2 px-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-600 text-white">
-            <StoreIcon className="h-5 w-5" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo-mark.svg" alt="" width={36} height={36} className="h-9 w-9" />
           <span className="font-display font-bold text-neutral-900">Catálogo</span>
         </div>
         <nav className="flex-1 space-y-1">
