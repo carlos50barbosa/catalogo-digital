@@ -11,14 +11,33 @@ export const STATUS_LABELS: Record<StoreStatus, string> = {
   CANCELED: 'Cancelada',
 }
 
-/** Status "vivo" (tolerância em PAST_DUE). PENDING/SUSPENDED/CANCELED são falsos. */
-export function isStorefrontLive(status: StoreStatus): boolean {
+/**
+ * Trial (sem cartão) vencido? TRIALING com prazo no passado. Como não há
+ * assinatura no gateway, nenhum webhook rebaixa o status — a expiração é
+ * avaliada preguiçosamente aqui (vitrine oculta na leitura; painel faz o
+ * self-heal para PENDING no próximo acesso do lojista).
+ */
+export function isTrialExpired(
+  status: StoreStatus,
+  trialEndsAt: Date | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  return status === 'TRIALING' && !!trialEndsAt && trialEndsAt.getTime() < now.getTime()
+}
+
+/** Status "vivo" (tolerância em PAST_DUE). PENDING/SUSPENDED/CANCELED e trial vencido são falsos. */
+export function isStorefrontLive(status: StoreStatus, trialEndsAt?: Date | null): boolean {
+  if (isTrialExpired(status, trialEndsAt)) return false
   return status === 'ACTIVE' || status === 'TRIALING' || status === 'PAST_DUE'
 }
 
-/** Vitrine pública = status vivo E publicada (onboarding concluído). */
-export function isStorePublic(status: StoreStatus, published: boolean): boolean {
-  return published && isStorefrontLive(status)
+/** Vitrine pública = status vivo (trial não vencido) E publicada (onboarding concluído). */
+export function isStorePublic(
+  status: StoreStatus,
+  published: boolean,
+  trialEndsAt?: Date | null,
+): boolean {
+  return published && isStorefrontLive(status, trialEndsAt)
 }
 
 export function isSuspended(status: StoreStatus): boolean {

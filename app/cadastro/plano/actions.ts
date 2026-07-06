@@ -8,10 +8,61 @@ import { prisma } from '@/lib/prisma'
 import { provisionSubscription } from '@/lib/billing/service'
 import { gateway } from '@/lib/billing'
 import { setStoreStatus } from '@/lib/data/billing'
+import { deriveIsActive } from '@/lib/store-status'
 import { fieldErrors } from '@/lib/validation'
 import { rateLimit } from '@/lib/rate-limit'
 import { config } from '@/lib/config'
 import type { ActionState } from '@/lib/action-state'
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d)
+  x.setDate(x.getDate() + n)
+  return x
+}
+
+/**
+ * Inicia o teste grátis SEM cartão: coloca a loja em TRIALING por `trialDays`
+ * dias e leva ao painel/onboarding, sem criar cliente/assinatura no Asaas.
+ * A cobrança só é configurada quando o lojista assina (choosePlanAction).
+ * Idempotente e à prova de reuso: só permite quando a loja está PENDING e
+ * ainda não usou trial (trialEndsAt null) — um trial vencido vira PENDING com
+ * trialEndsAt preenchido, bloqueando um segundo período grátis.
+ */
+export async function startTrialAction(): Promise<void> {
+  const session = await auth()
+  const email = session?.user?.email
+  const storeId = session?.user?.storeId
+  if (!email || !storeId) redirect('/painel/login')
+
+  const h = await headers()
+  const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || 'unknown'
+  if (!rateLimit(`trial:${ip}`, 6, 60_000)) redirect('/cadastro/plano')
+
+  // Exige e-mail verificado (mesma barreira do choosePlanAction).
+  const user = await prisma.user.findUnique({ where: { email }, select: { emailVerified: true } })
+  if (!user?.emailVerified) redirect('/cadastro/verificar-email')
+
+  const store = await prisma.store.findUnique({
+    where: { id: storeId },
+    select: { status: true, trialEndsAt: true, subscription: { select: { id: true } } },
+  })
+  if (store?.status === 'ACTIVE') redirect('/painel')
+  if (store?.subscription) redirect('/cadastro/aguardando') // já escolheu plano
+
+  const canStart =
+    store?.status === 'PENDING' && !store.trialEndsAt && config.signup.trialDays > 0
+  if (canStart) {
+    await prisma.store.update({
+      where: { id: storeId },
+      data: {
+        status: 'TRIALING',
+        isActive: deriveIsActive('TRIALING'),
+        trialEndsAt: addDays(new Date(), config.signup.trialDays),
+      },
+    })
+  }
+  redirect('/painel') // entra no onboarding (painel travado até publicar)
+}
 
 const schema = z.object({
   plan: z.enum(['ESSENCIAL', 'PROFISSIONAL', 'PREMIUM']),

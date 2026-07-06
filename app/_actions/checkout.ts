@@ -38,7 +38,7 @@ export async function createOrderAction(input: unknown): Promise<CheckoutResult>
   const store = await getStoreBySlug(data.slug)
   // Alinha o guard com a vitrine: só aceita pedido se a loja está pública
   // (status vivo E publicada) — não só pelo campo legado isActive.
-  if (!store || !isStorePublic(store.status, store.published)) {
+  if (!store || !isStorePublic(store.status, store.published, store.trialEndsAt)) {
     return { ok: false, error: 'Loja indisponível.' }
   }
 

@@ -84,6 +84,7 @@ model Store {
   accentColor    String? // hex, ex.: #16a34a
   isActive       Boolean     @default(true) // legado: derivado de status (live = não SUSPENDED/CANCELED)
   status         StoreStatus @default(ACTIVE)
+  trialEndsAt    DateTime? // fim do teste grátis sem cartão (null = nunca iniciou trial). Vencido => tratado como não-vivo.
   published      Boolean     @default(true) // vitrine só vai ao ar quando publicada (self-service: false até concluir onboarding)
   plan           Plan        @default(ESSENCIAL)
   viewCount      Int         @default(0) // total de visualizações da vitrine pública

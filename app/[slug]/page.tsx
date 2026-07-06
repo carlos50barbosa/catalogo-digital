@@ -27,7 +27,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const store = await getStoreBySlug(slug)
-  if (!store || !isStorePublic(store.status, store.published)) return { title: 'Loja não encontrada' }
+  if (!store || !isStorePublic(store.status, store.published, store.trialEndsAt))
+    return { title: 'Loja não encontrada' }
 
   const title = `${store.name} — Peça pelo WhatsApp`
   const description = `Faça seu pedido no ${store.name}: catálogo online com entrega e retirada, direto pelo WhatsApp.`
@@ -57,7 +58,7 @@ export default async function StorefrontPage({
   const store = await getStoreBySlug(slug)
   if (!store) notFound()
   if (isSuspended(store.status)) return <StoreUnavailable name={store.name} />
-  if (!isStorePublic(store.status, store.published)) notFound() // PENDING/CANCELED/não publicada
+  if (!isStorePublic(store.status, store.published, store.trialEndsAt)) notFound() // PENDING/CANCELED/trial vencido/não publicada
 
   // Conta a visualização da vitrine (só visita humana). Fire-and-forget: não
   // adiciona latência nem quebra a página se a escrita falhar.
