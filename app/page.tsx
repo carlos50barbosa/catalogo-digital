@@ -6,7 +6,9 @@ import {
   NotebookPen,
   Users,
   QrCode,
+  Sparkles,
 } from 'lucide-react'
+import { config } from '@/lib/config'
 
 // Página raiz / landing pública. Apresenta as principais funcionalidades do SaaS.
 export const metadata = {
@@ -56,6 +58,7 @@ const FEATURES = [
 
 export default function HomePage() {
   const year = new Date().getFullYear()
+  const trialDays = config.signup.trialDays
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
@@ -64,6 +67,13 @@ export default function HomePage() {
         <div className="flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo-mark.svg" alt="Catálogo Digital" width={56} height={56} className="mb-6 h-14 w-14" />
+
+          {trialDays > 0 && (
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-sm font-semibold text-green-700">
+              <Sparkles className="h-4 w-4" /> {trialDays} dias grátis — sem cartão de crédito
+            </span>
+          )}
+
           <h1 className="font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
             Catálogo Digital
           </h1>
@@ -77,7 +87,7 @@ export default function HomePage() {
               href="/cadastro"
               className="inline-flex h-11 items-center justify-center rounded-xl bg-green-600 px-6 text-sm font-medium text-white hover:bg-green-700"
             >
-              Criar minha loja
+              {trialDays > 0 ? 'Começar teste grátis' : 'Criar minha loja'}
             </Link>
             <Link
               href="/painel/login"
@@ -86,6 +96,11 @@ export default function HomePage() {
               Acessar o painel
             </Link>
           </div>
+          {trialDays > 0 && (
+            <p className="mt-3 text-xs text-neutral-500">
+              Teste tudo por {trialDays} dias. Só peça um plano quando decidir continuar.
+            </p>
+          )}
         </div>
 
         {/* Funcionalidades */}
