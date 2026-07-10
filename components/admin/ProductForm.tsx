@@ -3,9 +3,10 @@
 import { useActionState, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, ImagePlus, AlertCircle, Camera, Loader2 } from 'lucide-react'
+import { ArrowLeft, ImagePlus, Camera, Loader2 } from 'lucide-react'
 import { createProductAction, updateProductAction } from '@/app/painel/_actions/products'
 import { initialActionState } from '@/lib/action-state'
+import { useActionToast } from '@/components/ui/toast'
 import { CatalogPicker } from './CatalogPicker'
 import { ProductImage } from '@/components/ui/product-image'
 import { processSquareImage } from '@/lib/image-client'
@@ -46,6 +47,7 @@ export function ProductForm({
 }) {
   const action = mode === 'create' ? createProductAction : updateProductAction
   const [state, formAction, pending] = useActionState(action, initialActionState)
+  useActionToast(state)
 
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
@@ -121,13 +123,6 @@ export function ProductForm({
         {initial?.id && <input type="hidden" name="id" value={initial.id} />}
         <input type="hidden" name="catalogItemId" value={catalogItemId} />
         <input type="hidden" name="imageUrl" value={imageUrl} />
-
-        {state.error && (
-          <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {state.error}
-          </p>
-        )}
 
         {/* Imagem (câmera do celular ou galeria; comprimida no cliente) */}
         <div>

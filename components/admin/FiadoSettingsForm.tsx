@@ -1,9 +1,9 @@
 'use client'
 
 import { useActionState } from 'react'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { updateFiadoSettingsAction } from '@/app/painel/_actions/fiado'
 import { initialActionState } from '@/lib/action-state'
+import { useActionToast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,20 +19,10 @@ export type FiadoSettingsInitial = {
 
 export function FiadoSettingsForm({ initial }: { initial: FiadoSettingsInitial }) {
   const [state, formAction, pending] = useActionState(updateFiadoSettingsAction, initialActionState)
+  useActionToast(state)
 
   return (
     <form action={formAction} className="space-y-5">
-      {state.error && (
-        <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 shrink-0" /> {state.error}
-        </p>
-      )}
-      {state.ok && state.message && (
-        <p className="flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">
-          <CheckCircle2 className="h-4 w-4 shrink-0" /> {state.message}
-        </p>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle>Fiado</CardTitle>

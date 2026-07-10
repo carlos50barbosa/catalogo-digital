@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, AlertCircle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { ActionState } from '@/lib/action-state'
 
 // Toast minimalista, sem dependência externa. API estilo `toast.success('...')`
 // chamável de qualquer client component; o <Toaster/> (montado no layout raiz)
@@ -23,6 +24,25 @@ function emit(kind: ToastKind, message: string) {
 export const toast = {
   success: (message: string) => emit('success', message),
   error: (message: string) => emit('error', message),
+}
+
+// Liga o estado de uma Server Action (useActionState) ao toast flutuante:
+// o aviso de "salvo" (ou de erro) aparece na tela mesmo com o botão Salvar no
+// rodapé de um formulário longo. Erros por campo continuam inline; aqui só
+// avisamos, de forma flutuante, que há campos a revisar.
+export function useActionToast(state: ActionState) {
+  const seen = useRef(state)
+  useEffect(() => {
+    if (state === seen.current) return // ignora o estado inicial e re-renders sem submit
+    seen.current = state
+    if (state.ok && state.message) {
+      toast.success(state.message)
+    } else if (state.error) {
+      toast.error(state.error)
+    } else if (state.fieldErrors && Object.keys(state.fieldErrors).length > 0) {
+      toast.error('Revise os campos destacados.')
+    }
+  }, [state])
 }
 
 export function Toaster() {

@@ -2,10 +2,11 @@
 
 import { useActionState, useRef, useState } from 'react'
 import Image from 'next/image'
-import { AlertCircle, CheckCircle2, ImagePlus, Store as StoreIcon, Loader2 } from 'lucide-react'
+import { ImagePlus, Store as StoreIcon, Loader2 } from 'lucide-react'
 import { updateSettingsAction } from '@/app/painel/_actions/settings'
 import { processSquareImage } from '@/lib/image-client'
 import { initialActionState } from '@/lib/action-state'
+import { useActionToast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -40,6 +41,7 @@ export function SettingsForm({
   canCustomMessage?: boolean
 }) {
   const [state, formAction, pending] = useActionState(updateSettingsAction, initialActionState)
+  useActionToast(state)
 
   const [logoUrl] = useState(initial.logoUrl ?? '')
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -90,17 +92,6 @@ export function SettingsForm({
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="logoUrl" value={logoUrl} />
-
-      {state.error && (
-        <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 shrink-0" /> {state.error}
-        </p>
-      )}
-      {state.ok && state.message && (
-        <p className="flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">
-          <CheckCircle2 className="h-4 w-4 shrink-0" /> {state.message}
-        </p>
-      )}
 
       {/* Identidade */}
       <Card>

@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { toast } from '@/components/ui/toast'
 import { formatBRL } from '@/lib/format'
 import {
   launchDebitAction,
@@ -47,7 +48,6 @@ export function FiadoCustomerPanel({
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [limit, setLimit] = useState(String(creditLimit || ''))
-  const [error, setError] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<{ message: string; retry: () => void } | null>(null)
 
   const blocked = status === 'BLOCKED'
@@ -57,22 +57,22 @@ export function FiadoCustomerPanel({
     setAmount('')
     setDescription('')
     setDueDate('')
-    setError(null)
     setConfirm(null)
   }
 
-  // Trata o resultado final (ok/erro). O caso needsConfirm é interceptado nas funções run*.
-  function handle(res: FiadoActionResult, onOk: () => void) {
+  // Trata o resultado final (ok/erro) com toast flutuante. O caso needsConfirm é
+  // interceptado nas funções run*.
+  function handle(res: FiadoActionResult, onOk: () => void, successMsg: string) {
     if (res.ok) {
       onOk()
+      toast.success(successMsg)
       router.refresh()
     } else if (!('needsConfirm' in res)) {
-      setError(res.error)
+      toast.error(res.error)
     }
   }
 
   function runDebit(confirmFlag = false) {
-    setError(null)
     const value = Number(amount.replace(',', '.'))
     startTransition(async () => {
       const res = await launchDebitAction({
@@ -86,12 +86,11 @@ export function FiadoCustomerPanel({
         setConfirm({ message: res.message, retry: () => runDebit(true) })
         return
       }
-      handle(res, reset)
+      handle(res, reset, 'Compra lançada.')
     })
   }
 
   function runPayment(confirmFlag = false) {
-    setError(null)
     const value = Number(amount.replace(',', '.'))
     startTransition(async () => {
       const res = await launchPaymentAction({
@@ -104,26 +103,28 @@ export function FiadoCustomerPanel({
         setConfirm({ message: res.message, retry: () => runPayment(true) })
         return
       }
-      handle(res, reset)
+      handle(res, reset, 'Pagamento registrado.')
     })
   }
 
   function runLimit() {
-    setError(null)
     const value = Number(limit.replace(',', '.')) || 0
     startTransition(async () => {
       const res = await updateCreditLimitAction({ customerId, creditLimit: value })
-      handle(res, reset)
+      handle(res, reset, 'Limite atualizado.')
     })
   }
 
   function runToggleBlock() {
     if (!blocked && !window.confirm('Bloquear este cliente para novas compras fiadas?')) return
-    setError(null)
     startTransition(async () => {
       const res = await toggleBlockAction(customerId)
-      if (res.ok) router.refresh()
-      else if (!('needsConfirm' in res)) setError(res.error)
+      if (res.ok) {
+        toast.success(blocked ? 'Cliente desbloqueado.' : 'Cliente bloqueado.')
+        router.refresh()
+      } else if (!('needsConfirm' in res)) {
+        toast.error(res.error)
+      }
     })
   }
 
@@ -267,12 +268,6 @@ export function FiadoCustomerPanel({
                 </div>
               )}
 
-              {error && (
-                <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
-                  <AlertTriangle className="h-4 w-4 shrink-0" /> {error}
-                </p>
-              )}
-
               <Button
                 onClick={() => {
                   if (form === 'debit') runDebit()
@@ -288,12 +283,6 @@ export function FiadoCustomerPanel({
             </div>
           )}
         </div>
-      )}
-
-      {error && !form && (
-        <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
-          <AlertTriangle className="h-4 w-4 shrink-0" /> {error}
-        </p>
       )}
     </div>
   )
