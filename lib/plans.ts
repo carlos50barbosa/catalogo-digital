@@ -13,8 +13,10 @@ export type PlanFeatures = {
   ofertasEnabled: boolean
   customBranding: Branding
   prioritySupport: boolean
-  /** controle de fiado (caderneta digital) — disponível a partir do Profissional */
+  /** controle de fiado (caderneta digital) — disponível em todos os planos (limitado no Essencial) */
   fiadoEnabled: boolean
+  /** limite de clientes na caderneta de fiado (null = ilimitado). Só vale quando fiadoEnabled. */
+  fiadoMaxCustomers: number | null
   /** serviço "feito pra você" (fotos/posts) — flag de direito, não trava de software */
   managedContent: boolean
   /** valor mensal de referência (R$). O valor real cobrado vem da assinatura/gateway. */
@@ -25,12 +27,13 @@ export type PlanFeatures = {
 export const PLANS: Record<Plan, PlanFeatures> = {
   ESSENCIAL: {
     label: 'Essencial',
-    resumo: 'Pra começar a vender pelo WhatsApp.',
-    maxProducts: 80,
+    resumo: 'Pra começar a vender pelo WhatsApp, já com fiado.',
+    maxProducts: 300,
     ofertasEnabled: false,
     customBranding: 'basic',
     prioritySupport: false,
-    fiadoEnabled: false,
+    fiadoEnabled: true,
+    fiadoMaxCustomers: 25,
     managedContent: false,
     value: 59,
     priceLabel: 'R$ 59/mês',
@@ -43,6 +46,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     customBranding: 'full',
     prioritySupport: true,
     fiadoEnabled: true,
+    fiadoMaxCustomers: null,
     managedContent: false,
     value: 119,
     priceLabel: 'R$ 119/mês',
@@ -55,6 +59,7 @@ export const PLANS: Record<Plan, PlanFeatures> = {
     customBranding: 'full',
     prioritySupport: true,
     fiadoEnabled: true,
+    fiadoMaxCustomers: null,
     managedContent: true,
     value: 199,
     priceLabel: 'R$ 199/mês',
@@ -74,6 +79,17 @@ export function productLimit(plan: Plan): number | null {
 /** Pode adicionar mais um produto? (limite do plano vs uso atual) */
 export function canAddProduct(plan: Plan, currentCount: number): boolean {
   const max = PLANS[plan].maxProducts
+  return max === null || currentCount < max
+}
+
+/** Limite de clientes na caderneta de fiado do plano (null = ilimitado). */
+export function fiadoCustomerLimit(plan: Plan): number | null {
+  return PLANS[plan].fiadoMaxCustomers
+}
+
+/** Pode adicionar mais um cliente na caderneta? (limite do plano vs uso atual) */
+export function canAddFiadoCustomer(plan: Plan, currentCount: number): boolean {
+  const max = PLANS[plan].fiadoMaxCustomers
   return max === null || currentCount < max
 }
 

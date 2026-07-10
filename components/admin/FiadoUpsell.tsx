@@ -18,7 +18,7 @@ export function FiadoUpsell() {
           <NotebookPen className="h-6 w-6" />
         </div>
         <h2 className="mt-4 font-display text-lg font-bold text-neutral-900">
-          O controle de fiado está disponível no plano Profissional
+          O controle de fiado não está disponível no seu plano atual
         </h2>
         <p className="mt-1 text-sm text-neutral-600">
           Troque o caderninho por uma caderneta digital: registre dívidas e pagamentos, veja o

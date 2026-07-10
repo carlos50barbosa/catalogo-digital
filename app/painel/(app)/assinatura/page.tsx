@@ -31,6 +31,13 @@ export default async function AssinaturaPage() {
 
   const featureList = [
     limit === null ? 'Produtos ilimitados' : `Até ${limit} produtos`,
+    ...(features.fiadoEnabled
+      ? [
+          features.fiadoMaxCustomers === null
+            ? 'Caderneta de fiado ilimitada'
+            : `Caderneta de fiado (até ${features.fiadoMaxCustomers} clientes)`,
+        ]
+      : []),
     features.ofertasEnabled ? 'Seção de ofertas' : 'Catálogo padrão',
     features.customBranding === 'full' ? 'Personalização completa da marca' : 'Logo + cor',
     features.prioritySupport ? 'Suporte prioritário' : 'Suporte padrão',

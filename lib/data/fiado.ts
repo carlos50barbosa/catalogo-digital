@@ -34,6 +34,11 @@ export async function getFiadoAccess(storeId: string) {
   }
 }
 
+/** Nº de clientes na caderneta (contas de fiado) da loja — base do limite por plano. */
+export function countFiadoAccounts(storeId: string): Promise<number> {
+  return prisma.fiadoAccount.count({ where: { storeId } })
+}
+
 // ---------- Leitura: conta + extrato ----------
 
 /** Conta de fiado do cliente (ou null), com o Customer. Escopada por storeId. */
@@ -189,20 +194,22 @@ export type PostEntryParams = {
 
 export type PostEntryResult =
   | { ok: true; balance: number; entryId: string }
-  | { ok: false; reason: 'not_found' | 'blocked' | 'limit' | 'overpay' }
+  | { ok: false; reason: 'not_found' | 'blocked' | 'limit' | 'overpay' | 'customer_limit' }
 
 /**
  * Grava um lançamento e atualiza o saldo na MESMA transação (increment atômico).
  * Cria a conta sob demanda. `force` pula os guards de limite/excesso (usado em estorno
  * e quando o dono confirma o aviso). Retorna 'limit'/'overpay' SEM gravar quando o guard
  * dispara e !force — a action traduz isso em pedido de confirmação ao dono.
+ * `maxCustomers` (limite de clientes na caderneta do plano; null = ilimitado) barra a
+ * criação de uma conta NOVA quando a loja já atingiu o teto — retorna 'customer_limit'.
  */
 export async function postFiadoEntry(
   storeId: string,
   params: PostEntryParams,
-  opts: { force?: boolean; defaultCreditLimit?: number } = {},
+  opts: { force?: boolean; defaultCreditLimit?: number; maxCustomers?: number | null } = {},
 ): Promise<PostEntryResult> {
-  const { force = false, defaultCreditLimit = 0 } = opts
+  const { force = false, defaultCreditLimit = 0, maxCustomers = null } = opts
   const amount = round2(params.amount)
 
   return prisma.$transaction(async (tx) => {
@@ -218,6 +225,11 @@ export async function postFiadoEntry(
       return { ok: false as const, reason: 'not_found' as const }
     }
     if (!account) {
+      // Cliente novo na caderneta: respeita o teto de clientes do plano (Essencial = 25).
+      if (maxCustomers != null) {
+        const count = await tx.fiadoAccount.count({ where: { storeId } })
+        if (count >= maxCustomers) return { ok: false as const, reason: 'customer_limit' as const }
+      }
       account = await tx.fiadoAccount.create({
         data: { storeId, customerId: params.customerId, creditLimit: round2(defaultCreditLimit) },
       })

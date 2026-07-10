@@ -1,10 +1,11 @@
 'use server'
 
-import { Prisma } from '@prisma/client'
+import { Prisma, type Plan } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { requireStore } from '@/lib/auth-helpers'
 import { decimalToNumber } from '@/lib/format'
 import { getOrder } from '@/lib/data/orders'
+import { fiadoCustomerLimit } from '@/lib/plans'
 import {
   getFiadoAccess,
   getFiadoAccountByCustomer,
@@ -15,6 +16,7 @@ import {
   updateFiadoCreditLimit,
   setFiadoAccountStatus,
   updateFiadoSettings,
+  countFiadoAccounts,
 } from '@/lib/data/fiado'
 import {
   fiadoDebitSchema,
@@ -39,6 +41,23 @@ async function gate(storeId: string) {
   const access = await getFiadoAccess(storeId)
   if (access.available) return { ok: true as const, access }
   return { ok: false as const, error: access.planAllows ? STORE_OFF : PLAN_GATE }
+}
+
+/** Mensagem de teto de clientes do plano (Essencial = 25). */
+function customerCapMessage(limit: number): string {
+  return `Seu plano permite até ${limit} clientes na caderneta de fiado. Assine o Profissional para clientes ilimitados.`
+}
+
+/**
+ * Barra a criação de uma conta de fiado NOVA quando a loja já atingiu o teto de clientes
+ * do plano. Retorna a mensagem de erro (ou null se ok). Só bloqueia clientes novos — quem
+ * já tem conta continua operando normalmente mesmo no limite.
+ */
+async function fiadoCustomerCapError(storeId: string, plan: Plan): Promise<string | null> {
+  const limit = fiadoCustomerLimit(plan)
+  if (limit == null) return null
+  const count = await countFiadoAccounts(storeId)
+  return count >= limit ? customerCapMessage(limit) : null
 }
 
 function resolveDueDate(raw: string | null | undefined, termDays: number): Date {
@@ -73,6 +92,7 @@ export async function launchDebitAction(input: unknown): Promise<FiadoActionResu
   const defaultCreditLimit = g.access.settings
     ? decimalToNumber(g.access.settings.fiadoDefaultCreditLimit)
     : 0
+  const maxCustomers = g.access.store ? fiadoCustomerLimit(g.access.store.plan) : null
 
   const res = await postFiadoEntry(
     storeId,
@@ -84,7 +104,7 @@ export async function launchDebitAction(input: unknown): Promise<FiadoActionResu
       dueDate: resolveDueDate(data.dueDate, termDays),
       createdByUserId: userId,
     },
-    { force: data.confirm === true, defaultCreditLimit },
+    { force: data.confirm === true, defaultCreditLimit, maxCustomers },
   )
 
   if (res.ok) {
@@ -93,6 +113,9 @@ export async function launchDebitAction(input: unknown): Promise<FiadoActionResu
   }
   if (res.reason === 'blocked') {
     return { ok: false, error: 'Conta bloqueada. Desbloqueie para lançar novas compras.' }
+  }
+  if (res.reason === 'customer_limit') {
+    return { ok: false, error: customerCapMessage(maxCustomers ?? 0) }
   }
   if (res.reason === 'limit') {
     return {
@@ -202,6 +225,12 @@ export async function updateCreditLimitAction(input: unknown): Promise<FiadoActi
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' }
   }
+  // Cliente novo na caderneta (sem conta ainda) respeita o teto do plano.
+  const existing = await getFiadoAccountByCustomer(storeId, parsed.data.customerId)
+  if (!existing && g.access.store) {
+    const capErr = await fiadoCustomerCapError(storeId, g.access.store.plan)
+    if (capErr) return { ok: false, error: capErr }
+  }
   const ok = await updateFiadoCreditLimit(storeId, parsed.data.customerId, parsed.data.creditLimit)
   if (!ok) return { ok: false, error: 'Cliente não encontrado.' }
   revalidateFiado(parsed.data.customerId)
@@ -216,6 +245,11 @@ export async function toggleBlockAction(customerId: string): Promise<FiadoAction
   if (!g.ok) return { ok: false, error: g.error }
 
   const account = await getFiadoAccountByCustomer(storeId, customerId)
+  // Bloquear um cliente que ainda não está na caderneta criaria uma conta nova → respeita o teto.
+  if (!account && g.access.store) {
+    const capErr = await fiadoCustomerCapError(storeId, g.access.store.plan)
+    if (capErr) return { ok: false, error: capErr }
+  }
   const next = account?.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED'
   const defaultCreditLimit = g.access.settings
     ? decimalToNumber(g.access.settings.fiadoDefaultCreditLimit)
@@ -245,6 +279,7 @@ export async function launchFromOrderAction(orderId: string): Promise<FiadoActio
   const defaultCreditLimit = g.access.settings
     ? decimalToNumber(g.access.settings.fiadoDefaultCreditLimit)
     : 0
+  const maxCustomers = g.access.store ? fiadoCustomerLimit(g.access.store.plan) : null
   const dateLabel = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(order.createdAt)
 
   const res = await postFiadoEntry(
@@ -258,13 +293,16 @@ export async function launchFromOrderAction(orderId: string): Promise<FiadoActio
       dueDate: resolveDueDate(null, termDays),
       createdByUserId: userId,
     },
-    { force: true, defaultCreditLimit }, // registra a compra real (não bloqueia por limite)
+    { force: true, defaultCreditLimit, maxCustomers }, // força o valor real, mas respeita o teto de clientes do plano
   )
 
   if (res.ok) {
     revalidateFiado(order.customerId)
     revalidatePath(`/painel/pedidos/${orderId}`)
     return { ok: true, balance: res.balance }
+  }
+  if (res.reason === 'customer_limit') {
+    return { ok: false, error: customerCapMessage(maxCustomers ?? 0) }
   }
   return { ok: false, error: 'Não foi possível lançar o pedido na conta.' }
 }

@@ -67,6 +67,14 @@ export function PlanoForm() {
                   <Check className="h-3.5 w-3.5 text-green-600" />
                   {f.maxProducts === null ? 'Produtos ilimitados' : `Até ${f.maxProducts} produtos`}
                 </li>
+                {f.fiadoEnabled && (
+                  <li className="flex items-center gap-1.5 text-xs text-neutral-700">
+                    <Check className="h-3.5 w-3.5 text-green-600" />
+                    {f.fiadoMaxCustomers === null
+                      ? 'Caderneta de fiado ilimitada'
+                      : `Caderneta de fiado (até ${f.fiadoMaxCustomers} clientes)`}
+                  </li>
+                )}
                 {f.ofertasEnabled && (
                   <li className="flex items-center gap-1.5 text-xs text-neutral-700">
                     <Check className="h-3.5 w-3.5 text-green-600" /> Seção de ofertas

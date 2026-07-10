@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import { Settings, Wallet, Users as UsersIcon, AlertTriangle, NotebookPen } from 'lucide-react'
 import { requireOnboardedStore } from '@/lib/auth-helpers'
-import { getFiadoAccess, listFiadoDebtors, fiadoOverviewFromDebtors } from '@/lib/data/fiado'
+import {
+  getFiadoAccess,
+  listFiadoDebtors,
+  fiadoOverviewFromDebtors,
+  countFiadoAccounts,
+} from '@/lib/data/fiado'
+import { fiadoCustomerLimit } from '@/lib/plans'
 import { formatBRL } from '@/lib/format'
 import { FiadoUpsell } from '@/components/admin/FiadoUpsell'
 import { FiadoDebtorList } from '@/components/admin/FiadoDebtorList'
@@ -54,9 +60,29 @@ export default async function FiadoOverviewPage() {
   const storeName = access.store?.name ?? ''
   const reminderTemplate = access.settings?.fiadoReminderTemplate ?? null
 
+  // Teto de clientes do plano (Essencial): avisa quando atingido, para o upsell ao Profissional.
+  const fiadoLimit = access.store ? fiadoCustomerLimit(access.store.plan) : null
+  const accountCount = fiadoLimit != null ? await countFiadoAccounts(storeId) : 0
+  const atCap = fiadoLimit != null && accountCount >= fiadoLimit
+
   return (
     <div className="space-y-5">
       {header}
+
+      {atCap && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <p className="font-semibold">
+            Você atingiu o limite de {fiadoLimit} clientes na caderneta do seu plano.
+          </p>
+          <p className="mt-1">
+            Para adicionar novos clientes ao fiado,{' '}
+            <Link href="/painel/assinatura" className="font-semibold underline">
+              assine o Profissional
+            </Link>{' '}
+            (clientes ilimitados). Os clientes atuais continuam funcionando normalmente.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard
