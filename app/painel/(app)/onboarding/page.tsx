@@ -48,6 +48,7 @@ export default async function OnboardingPage() {
       icon: Palette,
       title: 'Sua marca',
       desc: 'Envie o logo, escolha a cor e confirme o WhatsApp.',
+      todo: 'Falta enviar a logo da sua loja.',
       done: brandDone,
       href: '/painel/configuracoes',
       cta: 'Configurar marca',
@@ -56,6 +57,7 @@ export default async function OnboardingPage() {
       icon: Truck,
       title: 'Entrega e pagamento',
       desc: 'Defina entrega/retirada, taxa, bairros, pedido mínimo e PIX.',
+      todo: 'Falta definir a entrega (endereço) e/ou a chave PIX.',
       done: deliveryDone,
       href: '/painel/configuracoes',
       cta: 'Configurar entrega',
@@ -63,7 +65,11 @@ export default async function OnboardingPage() {
     {
       icon: Package,
       title: 'Seus produtos',
-      desc: `Adicione pelo menos ${min} produtos (${productCount}/${min}). Use a biblioteca, a câmera ou importe por CSV.`,
+      desc: `Adicione pelo menos ${min} produtos. Use a biblioteca, a câmera ou importe por CSV.`,
+      todo:
+        productCount === 0
+          ? `Falta adicionar produtos (0 de ${min}).`
+          : `Faltam ${min - productCount} de ${min} produtos.`,
       done: productsDone,
       href: '/painel/produtos/novo',
       cta: 'Adicionar produtos',
@@ -71,15 +77,33 @@ export default async function OnboardingPage() {
   ]
 
   const doneCount = steps.filter((s) => s.done).length
+  const pending = steps.filter((s) => !s.done)
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-neutral-900">Vamos montar sua loja</h1>
         <p className="text-sm text-neutral-500">
-          {doneCount} de {steps.length} etapas concluídas. Faça no seu ritmo — seu progresso fica salvo.
+          {pending.length === 0
+            ? 'Tudo pronto! É só publicar sua loja.'
+            : `${doneCount} de ${steps.length} etapas concluídas — faltam ${pending.length} para publicar. Seu progresso fica salvo.`}
         </p>
       </div>
+
+      {/* Resumo do que ainda falta — deixa claro cada pendência. */}
+      {pending.length > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-800">Falta pouco para sua loja ir ao ar:</p>
+          <ul className="mt-1.5 space-y-1">
+            {pending.map((s) => (
+              <li key={s.title} className="flex items-start gap-2 text-sm text-amber-800">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                {s.todo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <ol className="space-y-3">
         {steps.map((s, i) => (
@@ -90,13 +114,23 @@ export default async function OnboardingPage() {
             <div
               className={
                 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full ' +
-                (s.done ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-500')
+                (s.done ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')
               }
             >
               {s.done ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-neutral-900">{s.title}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold text-neutral-900">{s.title}</p>
+                <span
+                  className={
+                    'rounded-full px-2 py-0.5 text-xs font-semibold ' +
+                    (s.done ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')
+                  }
+                >
+                  {s.done ? 'Concluído' : 'Pendente'}
+                </span>
+              </div>
               <p className="text-sm text-neutral-500">{s.desc}</p>
             </div>
             <Link href={s.href} className="shrink-0">

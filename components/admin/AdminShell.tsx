@@ -17,7 +17,6 @@ import {
   NotebookPen,
   BarChart3,
   Rocket,
-  Lock,
   MoreHorizontal,
 } from 'lucide-react'
 import { Sheet } from '@/components/ui/sheet'
@@ -47,7 +46,8 @@ const PRIMARY = new Set([
   '/painel/configuracoes',
 ])
 
-// Telas "operacionais" que ficam travadas enquanto a loja não foi publicada.
+// Telas "operacionais" que ficam OCULTAS enquanto a loja não foi publicada
+// (não fazem sentido no onboarding — pedido/cliente/divulgação de loja no ar).
 const LOCKED_HREFS = new Set([
   '/painel/pedidos',
   '/painel/clientes',
@@ -81,9 +81,10 @@ export function AdminShell({
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + '/')
 
-  // Travado: a 1ª entrada ("Início") vira "Onboarding" (o hub do cadastro).
+  // Travado (onboarding): oculta as telas operacionais e troca a 1ª entrada
+  // ("Início") por "Onboarding" (o hub do cadastro).
   const navItems = locked
-    ? NAV.map((i) =>
+    ? NAV.filter((i) => !LOCKED_HREFS.has(i.href)).map((i) =>
         i.href === '/painel'
           ? { href: '/painel/onboarding', label: 'Onboarding', icon: Rocket, exact: true }
           : i,
@@ -105,41 +106,32 @@ export function AdminShell({
           <span className="font-display font-bold text-neutral-900">Catálogo</span>
         </div>
         <nav className="flex-1 space-y-1">
-          {navItems.map((item) =>
-            locked && LOCKED_HREFS.has(item.href) ? (
-              <span
-                key={item.href}
-                title="Disponível depois de publicar a loja"
-                className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-300"
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="flex-1">{item.label}</span>
-                <Lock className="h-3.5 w-3.5" />
-              </span>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                  isActive(item.href, item.exact)
-                    ? 'bg-green-50 text-green-700'
-                    : 'text-neutral-600 hover:bg-neutral-100',
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.label}
-              </Link>
-            ),
-          )}
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                isActive(item.href, item.exact)
+                  ? 'bg-green-50 text-green-700'
+                  : 'text-neutral-600 hover:bg-neutral-100',
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.label}
+            </Link>
+          ))}
         </nav>
-        <Link
-          href={`/${storeSlug}`}
-          target="_blank"
-          className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
-        >
-          <ExternalLink className="h-4 w-4" /> Ver minha loja
-        </Link>
+        {/* Loja só é visível ao público depois de publicada — no onboarding o link levaria a "página não encontrada". */}
+        {!locked && (
+          <Link
+            href={`/${storeSlug}`}
+            target="_blank"
+            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+          >
+            <ExternalLink className="h-4 w-4" /> Ver minha loja
+          </Link>
+        )}
       </aside>
 
       {/* Top bar */}
@@ -150,14 +142,16 @@ export function AdminShell({
             <p className="text-xs text-neutral-500">/{storeSlug}</p>
           </div>
           <div className="flex items-center gap-1">
-            <Link
-              href={`/${storeSlug}`}
-              target="_blank"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100 lg:hidden"
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span className="hidden sm:inline">Ver loja</span>
-            </Link>
+            {!locked && (
+              <Link
+                href={`/${storeSlug}`}
+                target="_blank"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100 lg:hidden"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span className="hidden sm:inline">Ver loja</span>
+              </Link>
+            )}
             <LogoutButton />
           </div>
         </div>
@@ -172,27 +166,19 @@ export function AdminShell({
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white lg:hidden">
         <ul className="grid grid-cols-5">
           {mobileTabs.map((item) => {
-            const itemLocked = locked && LOCKED_HREFS.has(item.href)
             const active = isActive(item.href, item.exact)
             return (
               <li key={item.href}>
-                {itemLocked ? (
-                  <span className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-neutral-300">
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </span>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium',
-                      active ? 'text-green-700' : 'text-neutral-500',
-                    )}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </Link>
-                )}
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium',
+                    active ? 'text-green-700' : 'text-neutral-500',
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
               </li>
             )
           })}
@@ -216,19 +202,8 @@ export function AdminShell({
       <Sheet open={moreOpen} onClose={() => setMoreOpen(false)} title="Menu">
         <nav className="p-2">
           {navItems.map((item) => {
-            const itemLocked = locked && LOCKED_HREFS.has(item.href)
             const active = isActive(item.href, item.exact)
-            return itemLocked ? (
-              <span
-                key={item.href}
-                title="Disponível depois de publicar a loja"
-                className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-neutral-300"
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="flex-1">{item.label}</span>
-                <Lock className="h-3.5 w-3.5" />
-              </span>
-            ) : (
+            return (
               <Link
                 key={item.href}
                 href={item.href}
@@ -243,14 +218,16 @@ export function AdminShell({
               </Link>
             )
           })}
-          <Link
-            href={`/${storeSlug}`}
-            target="_blank"
-            onClick={() => setMoreOpen(false)}
-            className="mt-1 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
-          >
-            <ExternalLink className="h-5 w-5" /> Ver minha loja
-          </Link>
+          {!locked && (
+            <Link
+              href={`/${storeSlug}`}
+              target="_blank"
+              onClick={() => setMoreOpen(false)}
+              className="mt-1 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+            >
+              <ExternalLink className="h-5 w-5" /> Ver minha loja
+            </Link>
+          )}
         </nav>
       </Sheet>
     </div>
