@@ -73,8 +73,10 @@ export function Toaster() {
         <div
           key={t.id}
           className={cn(
-            'pointer-events-auto flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-card',
-            t.kind === 'success' ? 'bg-neutral-900' : 'bg-red-600',
+            'pointer-events-auto flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium shadow-card',
+            t.kind === 'success'
+              ? 'border-green-200 bg-green-50 text-green-700'
+              : 'border-red-200 bg-red-50 text-red-700',
           )}
         >
           {t.kind === 'success' ? (
