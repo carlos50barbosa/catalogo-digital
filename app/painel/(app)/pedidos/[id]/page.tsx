@@ -4,6 +4,7 @@ import { ArrowLeft, Truck, Package, MapPin, CreditCard, Phone, User } from 'luci
 import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getOrder } from '@/lib/data/orders'
 import { getFiadoAccess, getFiadoEntryByOrder } from '@/lib/data/fiado'
+import { readOptionSnapshot } from '@/lib/order/options-snapshot'
 import { Badge } from '@/components/ui/badge'
 import { LaunchOrderFiadoButton } from '@/components/admin/LaunchOrderFiadoButton'
 import {
@@ -73,21 +74,54 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       {/* Itens */}
       <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
         <ul className="divide-y divide-neutral-100">
-          {order.items.map((it) => (
-            <li key={it.id} className="flex items-center justify-between gap-3 p-4">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-neutral-900">{it.name}</p>
-                <p className="text-xs text-neutral-500">
-                  {formatQtyWithUnit(decimalToNumber(it.quantity), it.unit)} ×{' '}
-                  {formatBRL(decimalToNumber(it.unitPrice))}
-                  {it.isEstimated && ' (aprox.)'}
-                </p>
-              </div>
-              <span className="text-sm font-semibold text-neutral-900">
-                {formatBRL(decimalToNumber(it.lineTotal))}
-              </span>
-            </li>
-          ))}
+          {order.items.map((it) => {
+            const options = readOptionSnapshot(it.options)
+            return (
+              <li key={it.id} className="flex items-start justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-neutral-900">{it.name}</p>
+                  <p className="text-xs text-neutral-500">
+                    {formatQtyWithUnit(decimalToNumber(it.quantity), it.unit)} ×{' '}
+                    {formatBRL(decimalToNumber(it.unitPrice))}
+                    {it.isEstimated && ' (aprox.)'}
+                  </p>
+
+                  {/* Comanda: o que muda em relação ao item padrão. */}
+                  {options.length > 0 && (
+                    <ul className="mt-1 space-y-0.5">
+                      {options.map((o, i) => (
+                        <li key={i} className="text-xs text-neutral-600">
+                          {o.removed ? (
+                            <span className="font-medium text-red-600">
+                              sem {o.name.toLowerCase()}
+                            </span>
+                          ) : (
+                            <>
+                              + {o.name}
+                              {o.priceDelta !== 0 && (
+                                <span className="text-neutral-400">
+                                  {' '}
+                                  ({formatBRL(o.priceDelta)})
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {it.notes && (
+                    <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">
+                      obs: {it.notes}
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 text-sm font-semibold text-neutral-900">
+                  {formatBRL(decimalToNumber(it.lineTotal))}
+                </span>
+              </li>
+            )
+          })}
         </ul>
         <div className="space-y-1 border-t border-neutral-200 p-4 text-sm">
           <div className="flex justify-between text-neutral-600">
