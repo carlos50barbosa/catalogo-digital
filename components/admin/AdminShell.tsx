@@ -17,18 +17,20 @@ import {
   NotebookPen,
   BarChart3,
   Rocket,
+  ListPlus,
   MoreHorizontal,
 } from 'lucide-react'
 import { Sheet } from '@/components/ui/sheet'
 import { LogoutButton } from './LogoutButton'
 import { cn } from '@/lib/utils'
-import { segmentCopy } from '@/lib/segment'
+import { segmentCopy, hasOptions } from '@/lib/segment'
 import type { StoreSegment } from '@/lib/types'
 
 const NAV = [
   { href: '/painel', label: 'Início', icon: LayoutDashboard, exact: true },
   { href: '/painel/pedidos', label: 'Pedidos', icon: ShoppingBag },
   { href: '/painel/produtos', label: 'Produtos', icon: Package },
+  { href: '/painel/complementos', label: 'Complementos', icon: ListPlus }, // só lanchonete
   { href: '/painel/categorias', label: 'Categorias', icon: Tags },
   { href: '/painel/clientes', label: 'Clientes', icon: Users },
   { href: '/painel/fiado', label: 'Fiado', icon: NotebookPen },
@@ -96,10 +98,11 @@ export function AdminShell({
     : NAV
 
   // "Produtos" vira "Cardápio" na lanchonete — a rota é a mesma.
+  // Complementos só existem no menu de quem usa adicionais.
   const itemsLabel = segmentCopy(segment).itemsLabel
-  const navItems = baseNav.map((i) =>
-    i.href === '/painel/produtos' ? { ...i, label: itemsLabel } : i,
-  )
+  const navItems = baseNav
+    .filter((i) => i.href !== '/painel/complementos' || hasOptions(segment))
+    .map((i) => (i.href === '/painel/produtos' ? { ...i, label: itemsLabel } : i))
   const primarySet = locked ? PRIMARY_LOCKED : PRIMARY
 
   // Mobile: 4 abas principais + botão "Mais" (que abre o menu completo).

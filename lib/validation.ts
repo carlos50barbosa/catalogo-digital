@@ -119,6 +119,39 @@ export const checkoutSchema = z.object({
     .min(1, 'Carrinho vazio'),
 })
 
+// ---------- Complementos / adicionais ----------
+
+// minSelect/maxSelect definem a forma do grupo: maxSelect 1 = escolha única,
+// > 1 = múltipla; minSelect >= 1 = obrigatório (não há campo `required`).
+export const optionGroupSchema = z
+  .object({
+    name: z.string().min(1, 'Informe o nome do grupo').max(60),
+    minSelect: z.coerce
+      .number()
+      .int('Use um número inteiro')
+      .min(0, 'O mínimo não pode ser negativo')
+      .max(20, 'O mínimo não pode passar de 20'),
+    maxSelect: z.coerce
+      .number()
+      .int('Use um número inteiro')
+      .min(1, 'O máximo precisa ser pelo menos 1')
+      .max(20, 'O máximo não pode passar de 20'),
+  })
+  .refine((g) => g.minSelect <= g.maxSelect, {
+    message: 'O mínimo não pode ser maior que o máximo',
+    path: ['minSelect'],
+  })
+
+export const optionSchema = z.object({
+  name: z.string().min(1, 'Informe o nome da opção').max(60),
+  // Negativo é permitido de propósito: "sem queijo (-R$ 1,00)" é um desconto real.
+  priceDelta: z.coerce
+    .number({ message: 'Preço inválido' })
+    .min(-9999, 'Valor fora do limite')
+    .max(9999, 'Valor fora do limite'),
+  defaultSelected: z.boolean().optional().default(false),
+})
+
 export const csvRowSchema = z.object({
   nome: z.string().min(1, 'Nome obrigatório'),
   categoria: z.string().optional(),

@@ -110,6 +110,7 @@ model Store {
   nfeImports    NfeImport[]
   fiadoAccounts FiadoAccount[]
   fiadoEntries  FiadoEntry[]
+  optionGroups  OptionGroup[]
 
   @@index([slug])
 }
@@ -196,14 +197,73 @@ model Product {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  category    Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  catalogItem CatalogItem? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
-  orderItems  OrderItem[]
+  store        Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  catalogItem  CatalogItem?         @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+  orderItems   OrderItem[]
+  optionGroups ProductOptionGroup[]
 
   @@index([storeId, isAvailable])
   @@index([storeId, categoryId])
   @@index([storeId, barcode]) // match por código de barras (importação NF-e)
+}
+
+// ---------- Complementos / adicionais (lanchonete) ----------
+
+/// Grupo de opções de um item ("Adicionais", "Vem com", "Ponto da carne").
+/// Pertence à loja e é REUTILIZÁVEL entre produtos — numa lanchonete o mesmo
+/// grupo se repete em vários lanches.
+/// Obrigatoriedade é derivada de minSelect >= 1 (não há campo `required`
+/// separado, que poderia discordar).
+model OptionGroup {
+  id        String   @id @default(cuid())
+  storeId   String
+  name      String
+  minSelect Int      @default(0) // mínimo de opções que o cliente precisa marcar
+  maxSelect Int      @default(1) // 1 = escolha única; > 1 = múltipla
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store    Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  options  Option[]
+  products ProductOptionGroup[]
+
+  @@index([storeId])
+}
+
+/// Opção dentro de um grupo. `defaultSelected` cobre o caso "vem com":
+/// a opção já vem marcada e desmarcá-la significa TIRAR o ingrediente —
+/// por isso não existe um modelo separado para remoção.
+model Option {
+  id              String   @id @default(cuid())
+  groupId         String
+  name            String
+  priceDelta      Decimal  @default(0) @db.Decimal(10, 2) // acréscimo no preço do item
+  defaultSelected Boolean  @default(false)
+  isAvailable     Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  group OptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+}
+
+/// Liga um grupo a um produto. O vínculo é o que autoriza a opção no pedido:
+/// no checkout não basta a opção ser da loja, ela precisa estar ligada
+/// ÀQUELE produto (senão dá para colar o adicional barato de um item no outro).
+model ProductOptionGroup {
+  productId String
+  groupId   String
+  sortOrder Int    @default(0)
+
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group   OptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([productId, groupId])
+  @@index([groupId])
 }
 
 // ---------- Biblioteca compartilhada (GLOBAL, sem storeId) ----------
@@ -334,9 +394,14 @@ model OrderItem {
   name        String // snapshot
   unit        Unit // snapshot
   quantity    Decimal @db.Decimal(10, 3) // decimal: suporta peso (KG)
-  unitPrice   Decimal @db.Decimal(10, 2) // snapshot
+  unitPrice   Decimal @db.Decimal(10, 2) // snapshot: preço JÁ COMPOSTO (base + complementos)
   lineTotal   Decimal @db.Decimal(10, 2)
   isEstimated Boolean @default(false) // true para itens por KG (valor aproximado)
+  // Snapshot dos complementos: [{ groupName, name, priceDelta, removed }].
+  // Json (e não relação) porque é registro histórico — o pedido antigo não pode
+  // mudar quando a loja editar ou apagar a opção.
+  options     Json?
+  notes       String? @db.Text // observação do cliente para a cozinha
 
   order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
