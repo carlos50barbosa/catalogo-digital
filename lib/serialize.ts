@@ -79,6 +79,22 @@ export function serializeProduct(p: {
   isAvailable: boolean
   categoryId: string | null
   sortOrder: number
+  // Só o storefront seleciona os grupos; os demais callers omitem.
+  optionGroups?: {
+    group: {
+      id: string
+      name: string
+      minSelect: number
+      maxSelect: number
+      options: {
+        id: string
+        name: string
+        priceDelta: Prisma.Decimal | number
+        defaultSelected: boolean
+        isAvailable: boolean
+      }[]
+    }
+  }[]
 }): SerializedProduct {
   return {
     id: p.id,
@@ -90,6 +106,19 @@ export function serializeProduct(p: {
     isAvailable: p.isAvailable,
     categoryId: p.categoryId,
     sortOrder: p.sortOrder,
+    optionGroups: (p.optionGroups ?? []).map(({ group: g }) => ({
+      id: g.id,
+      name: g.name,
+      minSelect: g.minSelect,
+      maxSelect: g.maxSelect,
+      options: g.options.map((o) => ({
+        id: o.id,
+        name: o.name,
+        priceDelta: decimalToNumber(o.priceDelta),
+        defaultSelected: o.defaultSelected,
+        isAvailable: o.isAvailable,
+      })),
+    })),
   }
 }
 

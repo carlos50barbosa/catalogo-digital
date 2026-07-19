@@ -41,6 +41,25 @@ export type SerializedCategory = {
   sortOrder: number
 }
 
+export type SerializedOption = {
+  id: string
+  name: string
+  priceDelta: number
+  /** Já vem marcada: desmarcar significa TIRAR o ingrediente. */
+  defaultSelected: boolean
+  isAvailable: boolean
+}
+
+export type SerializedOptionGroup = {
+  id: string
+  name: string
+  /** minSelect >= 1 torna o grupo obrigatório. */
+  minSelect: number
+  /** maxSelect 1 = escolha única (radio); > 1 = múltipla (checkbox). */
+  maxSelect: number
+  options: SerializedOption[]
+}
+
 export type SerializedProduct = {
   id: string
   name: string
@@ -51,6 +70,7 @@ export type SerializedProduct = {
   isAvailable: boolean
   categoryId: string | null
   sortOrder: number
+  optionGroups: SerializedOptionGroup[]
 }
 
 export type SerializedCatalogItem = {
@@ -62,13 +82,41 @@ export type SerializedCatalogItem = {
 }
 
 /** Item do carrinho no cliente. */
-export type CartItem = {
+/**
+ * O que é PERSISTIDO no cookie do carrinho — só referências, sem snapshot de
+ * nome/preço/imagem. Cookie tem teto de ~4KB e uma lanchonete acumula muitos
+ * complementos por linha; além disso o servidor reprecifica tudo no checkout,
+ * então snapshot no cliente nunca foi autoridade.
+ */
+export type CartLine = {
   productId: string
+  optionIds: string[]
+  notes?: string
+  quantity: number
+}
+
+/** Complemento já resolvido para exibição. */
+export type CartItemOption = {
   name: string
-  price: number
+  priceDelta: number
+  /** Vinha marcado por padrão e o cliente desmarcou → "sem cebola". */
+  removed: boolean
+}
+
+/**
+ * Linha do carrinho resolvida contra os produtos da página (o que a UI usa).
+ * Produzida por useCart; nunca vai para o cookie.
+ */
+export type CartItem = CartLine & {
+  lineKey: string
+  name: string
   unit: Unit
   imageUrl: string | null
-  quantity: number
+  /** Preço do produto sem complementos. */
+  basePrice: number
+  /** basePrice + soma dos priceDelta — é o que multiplica pela quantidade. */
+  unitPrice: number
+  options: CartItemOption[]
 }
 
 // ---------- Importação por NF-e (XML) ----------

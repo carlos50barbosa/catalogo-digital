@@ -29,8 +29,10 @@ export function CartSheet({
   subtotal: number
   /** null = loja sem horário configurado; false = fechada agora. */
   isOpen: boolean | null
-  setQty: (id: string, qty: number) => void
-  remove: (id: string) => void
+  /** Chaveados por lineKey, não por productId: o mesmo item pode estar no
+   *  carrinho em montagens diferentes e cada uma é uma linha própria. */
+  setQty: (lineKey: string, qty: number) => void
+  remove: (lineKey: string) => void
   clear: () => void
 }) {
   const [view, setView] = useState<'cart' | 'checkout' | 'confirmation'>('cart')
@@ -148,7 +150,7 @@ export function CartSheet({
             const weighed = isWeighed(item.unit)
             const step = weighed ? 0.25 : 1
             return (
-              <li key={item.productId} className="flex gap-3 p-4">
+              <li key={item.lineKey} className="flex gap-3 p-4">
                 <ProductImage
                   src={item.imageUrl}
                   alt={item.name}
@@ -157,15 +159,43 @@ export function CartSheet({
                 />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <p className="line-clamp-2 text-sm font-medium text-neutral-900">{item.name}</p>
-                  <p className="text-sm text-accent">
-                    {formatBRL(item.price)}
+
+                  {/* Complementos: adicionados com "+", removidos com "sem". */}
+                  {item.options.length > 0 && (
+                    <ul className="mt-0.5 space-y-0.5">
+                      {item.options.map((o, idx) => (
+                        <li key={idx} className="text-xs text-neutral-500">
+                          {o.removed ? (
+                            <span className="text-neutral-400">− sem {o.name.toLowerCase()}</span>
+                          ) : (
+                            <>
+                              + {o.name}
+                              {o.priceDelta !== 0 && (
+                                <span className="text-neutral-400">
+                                  {' '}
+                                  ({o.priceDelta > 0 ? '+' : '−'}
+                                  {formatBRL(Math.abs(o.priceDelta))})
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {item.notes && (
+                    <p className="mt-0.5 text-xs italic text-neutral-500">obs: {item.notes}</p>
+                  )}
+
+                  <p className="mt-1 text-sm text-accent">
+                    {formatBRL(item.unitPrice)}
                     {weighed && <span className="text-xs text-neutral-400"> /kg</span>}
                   </p>
                   <div className="mt-auto flex items-center justify-between pt-1">
                     <div className="inline-flex items-center rounded-lg border border-neutral-200">
                       <button
                         type="button"
-                        onClick={() => setQty(item.productId, item.quantity - step)}
+                        onClick={() => setQty(item.lineKey, item.quantity - step)}
                         aria-label="Diminuir quantidade"
                         className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-50"
                       >
@@ -176,7 +206,7 @@ export function CartSheet({
                       </span>
                       <button
                         type="button"
-                        onClick={() => setQty(item.productId, item.quantity + step)}
+                        onClick={() => setQty(item.lineKey, item.quantity + step)}
                         aria-label="Aumentar quantidade"
                         className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-50"
                       >
@@ -184,12 +214,12 @@ export function CartSheet({
                       </button>
                     </div>
                     <span className="text-sm font-semibold text-neutral-900">
-                      {formatBRL(item.price * item.quantity)}
+                      {formatBRL(item.unitPrice * item.quantity)}
                       {weighed && <span className="ml-1 text-xs font-normal text-neutral-400">(aprox.)</span>}
                     </span>
                     <button
                       type="button"
-                      onClick={() => remove(item.productId)}
+                      onClick={() => remove(item.lineKey)}
                       aria-label={`Remover ${item.name}`}
                       className="text-neutral-400 hover:text-red-600"
                     >

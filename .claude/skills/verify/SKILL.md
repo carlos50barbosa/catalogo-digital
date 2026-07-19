@@ -54,6 +54,39 @@ Erros de validação voltam no HTML re-renderizado:
 - Node do Windows não enxerga `/tmp` do Git Bash. Para ler arquivos com
   `node -e`, grave no diretório de scratchpad com caminho `C:/...`.
 
+## Dirigir a vitrine num navegador de verdade
+
+O carrinho é 100% client-side — curl não o exercita. Não há Playwright no
+projeto, mas há Chrome instalado na máquina. Instale só a biblioteca (sem
+baixar navegador) no diretório de scratchpad:
+
+```bash
+npm install playwright-core
+```
+
+```js
+import { chromium } from 'playwright-core'
+const browser = await chromium.launch({
+  executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  headless: true,
+})
+const ctx = await browser.newContext({ viewport: { width: 420, height: 900 } })
+```
+
+Viewport estreito porque a vitrine é feita para celular. Para testar cenários
+de carrinho, injete o cookie antes de navegar:
+
+```js
+await ctx.addCookies([{
+  name: 'cart_mercadinho-demo',
+  value: encodeURIComponent(JSON.stringify([{ productId, optionIds: [], quantity: 2 }])),
+  url: 'http://localhost:3000',
+}])
+```
+
+Sempre escute `page.on('pageerror')` — erro de hidratação não aparece na
+saída do servidor, só no console do navegador.
+
 ## Conferir o banco
 
 ```bash

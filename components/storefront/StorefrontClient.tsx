@@ -30,7 +30,7 @@ export function StorefrontClient({
   products: SerializedProduct[]
   openStatus: OpenStatus
 }) {
-  const cart = useCart(store.slug)
+  const cart = useCart(store.slug, products)
   const [query, setQuery] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [cartOpen, setCartOpen] = useState(false)
@@ -64,11 +64,23 @@ export function StorefrontClient({
     return out
   }, [products, categories, flat])
 
+  // Soma TODAS as linhas do mesmo produto: com complementos, um X-Burguer pode
+  // estar no carrinho em três montagens diferentes e o card mostra o total.
   const qtyMap = useMemo(() => {
     const m: Record<string, number> = {}
-    for (const i of cart.items) m[i.productId] = i.quantity
+    for (const i of cart.items) m[i.productId] = (m[i.productId] ?? 0) + i.quantity
     return m
   }, [cart.items])
+
+  /**
+   * "+" do card: adiciona direto só quando não há nada para montar. Com grupos,
+   * abre a ficha — adicionar com lista vazia trataria as opções "vem com" como
+   * removidas e mandaria "sem alface, sem cebola" para a cozinha.
+   */
+  function quickAdd(p: SerializedProduct) {
+    if (p.optionGroups.length > 0) setSelected(p)
+    else cart.add(p, 1)
+  }
 
   function selectCategory(id: string) {
     setActiveCat(id)
@@ -109,7 +121,7 @@ export function StorefrontClient({
           />
         ) : flat ? (
           <section className="py-4">
-            <ProductGrid products={flat} qtyMap={qtyMap} onAdd={cart.add} onOpen={setSelected} />
+            <ProductGrid products={flat} qtyMap={qtyMap} onAdd={quickAdd} onOpen={setSelected} />
           </section>
         ) : (
           <div className="py-4">
@@ -124,7 +136,7 @@ export function StorefrontClient({
                 <ProductGrid
                   products={s.products}
                   qtyMap={qtyMap}
-                  onAdd={cart.add}
+                  onAdd={quickAdd}
                   onOpen={setSelected}
                 />
               </section>

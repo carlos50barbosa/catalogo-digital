@@ -41,6 +41,31 @@ export function listStorefrontProducts(
       isAvailable: true,
       categoryId: true,
       sortOrder: true,
+      // Complementos do item. Opções esgotadas vêm junto de propósito: a
+      // vitrine as mostra desabilitadas em vez de fingir que não existem.
+      optionGroups: {
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          group: {
+            select: {
+              id: true,
+              name: true,
+              minSelect: true,
+              maxSelect: true,
+              options: {
+                orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+                select: {
+                  id: true,
+                  name: true,
+                  priceDelta: true,
+                  defaultSelected: true,
+                  isAvailable: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   })
