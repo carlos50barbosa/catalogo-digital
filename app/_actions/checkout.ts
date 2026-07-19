@@ -62,6 +62,8 @@ export async function createOrderAction(input: unknown): Promise<CheckoutResult>
       unitPrice: i.unitPrice,
       unit: i.unit,
       isEstimated: i.isEstimated,
+      options: i.options,
+      notes: i.notes,
     })),
     subtotal: result.subtotal,
     deliveryFee: result.deliveryFee,

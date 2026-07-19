@@ -5,14 +5,25 @@
 import { formatBRL, formatQty, isWeighed } from '@/lib/format'
 import type { Unit } from '@/lib/types'
 
+export type OrderItemOption = {
+  name: string
+  priceDelta: number
+  /** Vinha por padrão e o cliente tirou → vira "sem X". */
+  removed: boolean
+}
+
 export type OrderItem = {
   name: string
   quantity: number
-  /** preço unitário */
+  /** preço unitário JÁ COMPOSTO (base + complementos) */
   unitPrice: number
   unit?: Unit
   /** item por peso → valor aproximado */
   isEstimated?: boolean
+  /** complementos que MUDARAM em relação ao item padrão */
+  options?: OrderItemOption[]
+  /** observação do cliente para a cozinha */
+  notes?: string
 }
 
 export type FulfillmentType = 'DELIVERY' | 'PICKUP'
@@ -34,11 +45,28 @@ export type OrderInput = {
   template?: string | null
 }
 
+/**
+ * Uma linha por item, com os complementos indentados logo abaixo. Só entra o
+ * que MUDOU em relação ao item padrão — listar todo "vem com" mantido viraria
+ * uma parede de texto no WhatsApp.
+ */
 function itemLine(it: OrderItem): string {
   const weighed = it.unit ? isWeighed(it.unit) : false
   const qty = weighed ? `${formatQty(it.quantity)}kg` : `${it.quantity}x`
   const approx = it.isEstimated ? ' (aprox.)' : ''
-  return `• ${qty} ${it.name} — ${formatBRL(it.unitPrice * it.quantity)}${approx}`
+  const lines = [`• ${qty} ${it.name} — ${formatBRL(it.unitPrice * it.quantity)}${approx}`]
+
+  for (const o of it.options ?? []) {
+    if (o.removed) {
+      lines.push(`   ✗ sem ${o.name.toLowerCase()}`)
+    } else {
+      const valor = o.priceDelta !== 0 ? ` (${formatBRL(o.priceDelta)})` : ''
+      lines.push(`   + ${o.name}${valor}`)
+    }
+  }
+  if (it.notes) lines.push(`   obs: ${it.notes}`)
+
+  return lines.join('\n')
 }
 
 /** Mensagem padrão (usada quando a loja não define orderMessageTemplate). */

@@ -94,7 +94,12 @@ export function CheckoutForm({
         paymentMethod: payment,
         consent,
         marketingConsent: marketing,
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          optionIds: i.optionIds,
+          notes: i.notes,
+        })),
       })
 
       if (res.ok) {

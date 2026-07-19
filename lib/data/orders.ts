@@ -11,7 +11,7 @@ import type { Unit } from '@prisma/client'
  */
 
 export type CreateOrderInput = {
-  items: { productId: string; quantity: number }[]
+  items: { productId: string; quantity: number; optionIds?: string[]; notes?: string }[]
   customerName: string
   customerPhone: string
   fulfillment: 'DELIVERY' | 'PICKUP'
@@ -21,14 +21,26 @@ export type CreateOrderInput = {
   marketingConsent?: boolean
 }
 
+/** Complemento no snapshot do item (o que foi somado ou tirado). */
+export type ComputedOption = {
+  groupName: string
+  name: string
+  priceDelta: number
+  /** Vinha por padrão e o cliente tirou → "sem cebola". */
+  removed: boolean
+}
+
 export type ComputedItem = {
   productId: string
   name: string
   unit: Unit
   quantity: number
+  /** Preço unitário JÁ COMPOSTO: base + complementos. */
   unitPrice: number
   lineTotal: number
   isEstimated: boolean
+  options: ComputedOption[]
+  notes?: string
 }
 
 export type CreateOrderResult =
@@ -70,9 +82,19 @@ export async function createOrder(
     return { ok: false, error: 'Endereço obrigatório para entrega.' }
   }
 
-  // Busca os produtos DA LOJA (valida pertencimento por storeId).
+  // Busca os produtos DA LOJA (valida pertencimento por storeId), junto com os
+  // grupos de complementos LIGADOS a cada produto. É esse vínculo que autoriza
+  // a opção: não basta ela ser da loja.
   const ids = [...new Set(input.items.map((i) => i.productId))]
-  const products = await prisma.product.findMany({ where: { id: { in: ids }, storeId } })
+  const products = await prisma.product.findMany({
+    where: { id: { in: ids }, storeId },
+    include: {
+      optionGroups: {
+        orderBy: { sortOrder: 'asc' },
+        include: { group: { include: { options: { orderBy: { sortOrder: 'asc' } } } } },
+      },
+    },
+  })
   const byId = new Map(products.map((p) => [p.id, p]))
 
   const computed: ComputedItem[] = []
@@ -89,16 +111,64 @@ export async function createOrder(
     qty = isWeighed ? round(qty, 3) : Math.round(qty)
     if (qty <= 0) return { ok: false, error: `Quantidade inválida para "${p.name}".` }
 
-    const unitPrice = decimalToNumber(p.price)
+    // ----- Complementos: revalida TUDO contra o banco -----
+    const grupos = p.optionGroups.map((pg) => pg.group)
+    // Só as opções dos grupos ligados a ESTE produto entram no universo válido.
+    const permitidas = new Map(grupos.flatMap((g) => g.options.map((o) => [o.id, { g, o }])))
+    const escolhidas = [...new Set(item.optionIds ?? [])]
+
+    for (const id of escolhidas) {
+      const hit = permitidas.get(id)
+      // Opção de outro produto/loja, ou inexistente: recusa em vez de ignorar.
+      // Ignorar deixaria o cliente montar um lanche que a loja não vende.
+      if (!hit) return { ok: false, error: `Há uma opção inválida em "${p.name}".` }
+      if (!hit.o.isAvailable) {
+        return { ok: false, error: `"${hit.o.name}" acabou. Refaça esse item.` }
+      }
+    }
+
+    const escolhidasSet = new Set(escolhidas)
+    const options: ComputedOption[] = []
+    let delta = 0
+
+    for (const g of grupos) {
+      const marcadas = g.options.filter((o) => escolhidasSet.has(o.id))
+      if (marcadas.length < g.minSelect) {
+        return { ok: false, error: `Escolha uma opção em "${g.name}" para "${p.name}".` }
+      }
+      if (marcadas.length > g.maxSelect) {
+        return { ok: false, error: `Você escolheu opções demais em "${g.name}".` }
+      }
+      for (const o of g.options) {
+        const priceDelta = decimalToNumber(o.priceDelta)
+        if (escolhidasSet.has(o.id)) {
+          delta += priceDelta
+          // Espelha a regra da vitrine: registra só o que MUDOU em relação ao
+          // item padrão. Um "vem com" mantido não vira linha na comanda.
+          if (!o.defaultSelected || priceDelta !== 0) {
+            options.push({ groupName: g.name, name: o.name, priceDelta, removed: false })
+          }
+        } else if (o.defaultSelected) {
+          options.push({ groupName: g.name, name: o.name, priceDelta: 0, removed: true })
+        }
+      }
+    }
+
+    const unitPrice = round(decimalToNumber(p.price) + delta)
+    if (unitPrice < 0) return { ok: false, error: `Preço inválido para "${p.name}".` }
     const lineTotal = round(unitPrice * qty)
+    const notes = item.notes?.trim() || undefined
+
     computed.push({
       productId: p.id,
       name: p.name, // snapshot
       unit: p.unit,
       quantity: qty,
-      unitPrice, // snapshot
+      unitPrice, // snapshot: base + complementos
       lineTotal,
       isEstimated: isWeighed,
+      options,
+      notes,
     })
   }
 
@@ -142,6 +212,10 @@ export async function createOrder(
             unitPrice: c.unitPrice,
             lineTotal: c.lineTotal,
             isEstimated: c.isEstimated,
+            // Snapshot: o pedido antigo não pode mudar quando a loja editar a
+            // opção. null quando não há complementos (mantém o histórico limpo).
+            options: c.options.length ? c.options : undefined,
+            notes: c.notes,
           })),
         },
       },

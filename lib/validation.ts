@@ -114,6 +114,10 @@ export const checkoutSchema = z.object({
       z.object({
         productId: z.string().min(1),
         quantity: z.coerce.number().positive(),
+        // Só IDs: o servidor busca a opção, confere que ela pertence a um grupo
+        // ligado ao produto e recalcula o preço. Ver createOrder.
+        optionIds: z.array(z.string().min(1)).max(50).optional().default([]),
+        notes: z.string().max(140).optional(),
       }),
     )
     .min(1, 'Carrinho vazio'),
