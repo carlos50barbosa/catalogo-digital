@@ -15,6 +15,7 @@ import { sendVerificationEmail } from '@/lib/email'
 import { rateLimit } from '@/lib/rate-limit'
 import { config } from '@/lib/config'
 import { slugify, normalizeBrWhatsapp } from '@/lib/utils'
+import { DEFAULT_SEGMENT } from '@/lib/segment'
 import type { ActionState } from '@/lib/action-state'
 
 export async function signupAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -32,6 +33,7 @@ export async function signupAction(_prev: ActionState, formData: FormData): Prom
     email: String(formData.get('email') ?? '').trim(),
     password: String(formData.get('password') ?? ''),
     slug: String(formData.get('slug') ?? '').trim() || undefined,
+    segment: String(formData.get('segment') ?? '') || DEFAULT_SEGMENT,
   }
   const parsed = signupSchema.safeParse(obj)
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) }
@@ -57,6 +59,7 @@ export async function signupAction(_prev: ActionState, formData: FormData): Prom
     email: parsed.data.email,
     password: parsed.data.password,
     slug,
+    segment: parsed.data.segment,
   })
 
   // E-mail de verificação (em dev sem SMTP, o link é logado no console).

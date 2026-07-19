@@ -15,10 +15,12 @@ import { Label, FieldError } from '@/components/ui/label'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { WEEKDAY_LABELS } from '@/lib/store-hours'
 import { uploadSrc, formatBrPhone } from '@/lib/utils'
-import type { Fulfillment, OpeningHours } from '@/lib/types'
+import { SEGMENT_LIST } from '@/lib/segment'
+import type { Fulfillment, OpeningHours, StoreSegment } from '@/lib/types'
 
 export type SettingsInitial = {
   name: string
+  segment: StoreSegment
   logoUrl: string | null
   whatsappNumber: string
   accentColor: string | null
@@ -140,6 +142,21 @@ export function SettingsForm({
             <Label htmlFor="name">Nome da loja</Label>
             <Input id="name" name="name" defaultValue={initial.name} required />
             <FieldError message={state.fieldErrors?.name} />
+          </div>
+
+          <div>
+            <Label htmlFor="segment">Ramo da loja</Label>
+            <Select id="segment" name="segment" defaultValue={initial.segment}>
+              {SEGMENT_LIST.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label} — {s.hint}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-xs text-neutral-400">
+              Muda os nomes das telas e como o cliente monta o pedido na sua vitrine.
+            </p>
+            <FieldError message={state.fieldErrors?.segment} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

@@ -47,6 +47,13 @@ enum Unit {
   PCT
 }
 
+/// Ramo da loja. Define rótulos do painel, biblioteca de itens sugerida e o
+/// tipo schema.org da vitrine. É reversível: o dono troca sem recriar a conta.
+enum StoreSegment {
+  MERCADO
+  LANCHONETE
+}
+
 enum Fulfillment {
   DELIVERY_AND_PICKUP
   DELIVERY_ONLY
@@ -76,20 +83,21 @@ enum FiadoEntryType {
 
 /// Store é o tenant. Cada mercadinho é uma Store.
 model Store {
-  id             String      @id @default(cuid())
-  slug           String      @unique // identifica a loja na vitrine pública /{slug}
+  id             String       @id @default(cuid())
+  slug           String       @unique // identifica a loja na vitrine pública /{slug}
   name           String
+  segment        StoreSegment @default(MERCADO) // ramo: muda rótulos/vitrine, não o plano
   logoUrl        String?
   whatsappNumber String // formato internacional, ex.: 5582999999999
   accentColor    String? // hex, ex.: #16a34a
-  isActive       Boolean     @default(true) // legado: derivado de status (live = não SUSPENDED/CANCELED)
-  status         StoreStatus @default(ACTIVE)
+  isActive       Boolean      @default(true) // legado: derivado de status (live = não SUSPENDED/CANCELED)
+  status         StoreStatus  @default(ACTIVE)
   trialEndsAt    DateTime? // fim do teste grátis sem cartão (null = nunca iniciou trial). Vencido => tratado como não-vivo.
-  published      Boolean     @default(true) // vitrine só vai ao ar quando publicada (self-service: false até concluir onboarding)
-  plan           Plan        @default(ESSENCIAL)
-  viewCount      Int         @default(0) // total de visualizações da vitrine pública
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  published      Boolean      @default(true) // vitrine só vai ao ar quando publicada (self-service: false até concluir onboarding)
+  plan           Plan         @default(ESSENCIAL)
+  viewCount      Int          @default(0) // total de visualizações da vitrine pública
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   users         User[]
   settings      StoreSettings?
@@ -339,16 +347,16 @@ model OrderItem {
 // ---------- Base de clientes da loja ----------
 
 model Customer {
-  id          String    @id @default(cuid())
-  storeId     String
-  name        String
-  phone       String
-  address     String?
+  id               String    @id @default(cuid())
+  storeId          String
+  name             String
+  phone            String
+  address          String?
   // Opt-in explícito p/ receber contato/ofertas por WhatsApp (LGPD). O telefone
   // é coletado para EXECUTAR o pedido; usá-lo para marketing exige este consentimento.
-  marketingConsent Boolean @default(false)
-  createdAt   DateTime  @default(now())
-  lastOrderAt DateTime?
+  marketingConsent Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  lastOrderAt      DateTime?
 
   store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
   orders       Order[]
@@ -368,7 +376,7 @@ model Subscription {
   gateway               String      @default("asaas")
   gatewayCustomerId     String?
   gatewaySubscriptionId String?
-  cpfCnpj               String?     // documento do responsável (só dígitos); usado p/ sinalizar CPF repetido entre lojas
+  cpfCnpj               String? // documento do responsável (só dígitos); usado p/ sinalizar CPF repetido entre lojas
   plan                  Plan
   status                String      @default("PENDING") // espelha o status no gateway
   billingType           BillingType @default(UNDEFINED)

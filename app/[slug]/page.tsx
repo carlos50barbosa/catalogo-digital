@@ -14,6 +14,7 @@ import { getOpenStatus } from '@/lib/store-hours'
 import { isStorePublic, isSuspended } from '@/lib/store-status'
 import { safeHexColor, uploadSrc, isBotUserAgent } from '@/lib/utils'
 import { config } from '@/lib/config'
+import { segmentCopy } from '@/lib/segment'
 import { StorefrontClient } from '@/components/storefront/StorefrontClient'
 import { StoreUnavailable } from '@/components/storefront/StoreUnavailable'
 
@@ -77,10 +78,10 @@ export default async function StorefrontPage({
   const openStatus = getOpenStatus(settings.openingHours)
   const accent = safeHexColor(store.accentColor, config.defaultAccentColor)
 
-  // JSON-LD para SEO local (GroceryStore).
+  // JSON-LD para SEO local — o tipo schema.org varia com o ramo da loja.
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'GroceryStore',
+    '@type': segmentCopy(store.segment).schemaType,
     name: store.name,
     telephone: `+${store.whatsappNumber}`,
     url: `${config.appUrl}/${store.slug}`,

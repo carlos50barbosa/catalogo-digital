@@ -1,19 +1,23 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { AlertCircle, Store } from 'lucide-react'
+import { AlertCircle, Store, ShoppingCart, Sandwich } from 'lucide-react'
 import { signupAction } from '@/app/cadastro/actions'
 import { initialActionState } from '@/lib/action-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label, FieldError } from '@/components/ui/label'
-import { slugify, formatBrPhone } from '@/lib/utils'
+import { slugify, formatBrPhone, cn } from '@/lib/utils'
+import { SEGMENT_LIST, DEFAULT_SEGMENT } from '@/lib/segment'
+
+const SEGMENT_ICONS = { MERCADO: ShoppingCart, LANCHONETE: Sandwich } as const
 
 export function CadastroForm() {
   const [state, formAction, pending] = useActionState(signupAction, initialActionState)
   const [storeName, setStoreName] = useState('')
   const [slug, setSlug] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [segment, setSegment] = useState<string>(DEFAULT_SEGMENT)
 
   const previewSlug = (slug ? slugify(slug) : slugify(storeName)) || 'sua-loja'
 
@@ -24,6 +28,45 @@ export function CadastroForm() {
           <AlertCircle className="h-4 w-4 shrink-0" /> {state.error}
         </p>
       )}
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-neutral-700">O que você vende?</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {SEGMENT_LIST.map((s) => {
+            const Icon = SEGMENT_ICONS[s.value]
+            const checked = segment === s.value
+            return (
+              <label
+                key={s.value}
+                className={cn(
+                  'flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition',
+                  checked
+                    ? 'border-accent bg-green-50/60 ring-1 ring-accent'
+                    : 'border-neutral-300 bg-white hover:bg-neutral-50',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="segment"
+                  value={s.value}
+                  checked={checked}
+                  onChange={() => setSegment(s.value)}
+                  className="sr-only"
+                />
+                <Icon
+                  className={cn('mt-0.5 h-5 w-5 shrink-0', checked ? 'text-accent' : 'text-neutral-400')}
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-neutral-900">{s.label}</span>
+                  <span className="block text-xs text-neutral-500">{s.hint}</span>
+                </span>
+              </label>
+            )
+          })}
+        </div>
+        <p className="mt-1 text-xs text-neutral-400">Dá para mudar depois nas configurações.</p>
+        <FieldError message={state.fieldErrors?.segment} />
+      </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

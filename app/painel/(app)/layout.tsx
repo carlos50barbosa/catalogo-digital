@@ -8,6 +8,7 @@ import { TrialBanner } from '@/components/admin/TrialBanner'
 import { panelAccess, isTrialExpired } from '@/lib/store-status'
 import { setStoreStatus } from '@/lib/data/billing'
 import { safeHexColor } from '@/lib/utils'
+import { DEFAULT_SEGMENT } from '@/lib/segment'
 import { config } from '@/lib/config'
 
 // Painel não deve ser indexado.
@@ -45,7 +46,12 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
   return (
     <div style={{ '--accent': accent } as React.CSSProperties}>
-      <AdminShell storeName={name} storeSlug={slug} locked={locked}>
+      <AdminShell
+        storeName={name}
+        storeSlug={slug}
+        segment={store?.segment ?? DEFAULT_SEGMENT}
+        locked={locked}
+      >
         <PanelStatusGate access={access} />
         {store?.status === 'TRIALING' && store.trialEndsAt && (
           <TrialBanner endsAt={store.trialEndsAt} />

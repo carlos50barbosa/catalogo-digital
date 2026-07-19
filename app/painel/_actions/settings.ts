@@ -35,6 +35,9 @@ export async function updateSettingsAction(
 
   const obj = {
     name: String(formData.get('name') ?? '').trim(),
+    // Sem fallback de propósito: numa EDIÇÃO, cair no default rebaixaria uma
+    // lanchonete a mercadinho sem avisar. Campo ausente vira erro de validação.
+    segment: String(formData.get('segment') ?? ''),
     whatsappNumber: normalizeBrWhatsapp(String(formData.get('whatsappNumber') ?? '')),
     accentColor: String(formData.get('accentColor') ?? '').trim(),
     address: emptyToNull(formData.get('address')),
@@ -71,6 +74,7 @@ export async function updateSettingsAction(
 
   await updateStoreProfile(storeId, {
     name: parsed.data.name,
+    segment: parsed.data.segment,
     whatsappNumber: parsed.data.whatsappNumber,
     accentColor: accent,
     logoUrl,

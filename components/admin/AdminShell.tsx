@@ -22,6 +22,8 @@ import {
 import { Sheet } from '@/components/ui/sheet'
 import { LogoutButton } from './LogoutButton'
 import { cn } from '@/lib/utils'
+import { segmentCopy } from '@/lib/segment'
+import type { StoreSegment } from '@/lib/types'
 
 const NAV = [
   { href: '/painel', label: 'Início', icon: LayoutDashboard, exact: true },
@@ -68,11 +70,13 @@ const PRIMARY_LOCKED = new Set([
 export function AdminShell({
   storeName,
   storeSlug,
+  segment,
   locked = false,
   children,
 }: {
   storeName: string
   storeSlug: string
+  segment: StoreSegment
   locked?: boolean
   children: React.ReactNode
 }) {
@@ -83,13 +87,19 @@ export function AdminShell({
 
   // Travado (onboarding): oculta as telas operacionais e troca a 1ª entrada
   // ("Início") por "Onboarding" (o hub do cadastro).
-  const navItems = locked
+  const baseNav = locked
     ? NAV.filter((i) => !LOCKED_HREFS.has(i.href)).map((i) =>
         i.href === '/painel'
           ? { href: '/painel/onboarding', label: 'Onboarding', icon: Rocket, exact: true }
           : i,
       )
     : NAV
+
+  // "Produtos" vira "Cardápio" na lanchonete — a rota é a mesma.
+  const itemsLabel = segmentCopy(segment).itemsLabel
+  const navItems = baseNav.map((i) =>
+    i.href === '/painel/produtos' ? { ...i, label: itemsLabel } : i,
+  )
   const primarySet = locked ? PRIMARY_LOCKED : PRIMARY
 
   // Mobile: 4 abas principais + botão "Mais" (que abre o menu completo).

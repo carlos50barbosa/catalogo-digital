@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
 import { storage } from '@/lib/storage'
-import type { Prisma, Fulfillment } from '@prisma/client'
+import type { Prisma, Fulfillment, StoreSegment } from '@prisma/client'
 
 /**
  * Exclui a loja e TODOS os dados vinculados (LGPD / porta de saída).
@@ -58,6 +58,7 @@ export async function updateStoreProfile(
   storeId: string,
   data: {
     name: string
+    segment: StoreSegment
     whatsappNumber: string
     accentColor: string | null
     logoUrl?: string | null

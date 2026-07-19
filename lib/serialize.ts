@@ -29,6 +29,7 @@ export function serializeStore(s: Store): SerializedStore {
     accentColor: s.accentColor,
     isActive: s.isActive,
     plan: s.plan,
+    segment: s.segment,
   }
 }
 

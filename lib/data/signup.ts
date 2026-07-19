@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
+import type { StoreSegment } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
 
@@ -38,6 +39,7 @@ export async function createSelfServiceStore(input: {
   email: string
   password: string
   slug: string
+  segment: StoreSegment
 }): Promise<{ storeId: string; token: string }> {
   const passwordHash = await bcrypt.hash(input.password, 10)
   const token = crypto.randomBytes(32).toString('hex')
@@ -47,6 +49,7 @@ export async function createSelfServiceStore(input: {
     data: {
       slug: input.slug,
       name: input.storeName,
+      segment: input.segment,
       whatsappNumber: input.whatsapp,
       status: 'PENDING', // self-service nasce pendente; vira público após pagamento + publicar
       published: false,

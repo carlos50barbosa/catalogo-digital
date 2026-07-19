@@ -19,12 +19,13 @@ import { getOrderStats } from '@/lib/data/orders'
 import { CopyButton } from '@/components/admin/CopyButton'
 import { formatBRL } from '@/lib/format'
 import { config } from '@/lib/config'
+import { segmentCopy } from '@/lib/segment'
 
 export const dynamic = 'force-dynamic'
 
 const SHORTCUTS = [
   { href: '/painel/pedidos', label: 'Pedidos', desc: 'Veja os pedidos gerados', icon: ShoppingBag },
-  { href: '/painel/produtos', label: 'Produtos', desc: 'Cadastre e edite', icon: Package },
+  { href: '/painel/produtos', label: 'Produtos', desc: 'Cadastre e edite', icon: Package }, // rótulo trocado por segmento abaixo
   { href: '/painel/clientes', label: 'Clientes', desc: 'Sua base de clientes', icon: Users },
   { href: '/painel/fiado', label: 'Fiado', desc: 'Caderneta digital', icon: NotebookPen },
   { href: '/painel/relatorios', label: 'Relatórios', desc: 'Vendas, produtos e lucro', icon: BarChart3 },
@@ -44,6 +45,10 @@ export default async function DashboardPage() {
   ])
   const slug = store?.slug ?? ''
   const publicUrl = `${config.appUrl}/${slug}`
+  const copy = segmentCopy(store?.segment)
+  const shortcuts = SHORTCUTS.map((s) =>
+    s.href === '/painel/produtos' ? { ...s, label: copy.itemsLabel, desc: copy.itemsDesc } : s,
+  )
 
   return (
     <div className="space-y-6">
@@ -79,14 +84,14 @@ export default async function DashboardPage() {
             <ExternalLink className="h-4 w-4" /> Ver minha loja
           </Link>
           <span className="inline-flex h-9 items-center rounded-lg bg-neutral-100 px-3 text-sm text-neutral-500">
-            {totalProducts} produtos
+            {totalProducts} {totalProducts === 1 ? copy.itemLabel : copy.itemLabelPlural}
           </span>
         </div>
       </div>
 
       {/* Atalhos */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {SHORTCUTS.map((s) => (
+        {shortcuts.map((s) => (
           <Link
             key={s.href}
             href={s.href}

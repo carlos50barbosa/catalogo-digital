@@ -35,6 +35,7 @@ export const categorySchema = z.object({
 
 export const settingsSchema = z.object({
   name: z.string().min(1, 'Informe o nome da loja').max(120),
+  segment: z.enum(['MERCADO', 'LANCHONETE'], { message: 'Escolha o ramo da loja' }),
   whatsappNumber: z
     .string()
     .min(10, 'WhatsApp incompleto')
@@ -89,6 +90,7 @@ export const signupSchema = z.object({
   email: z.string().email('E-mail inválido'),
   password: passwordRule,
   slug: z.string().max(60).optional(),
+  segment: z.enum(['MERCADO', 'LANCHONETE'], { message: 'Escolha o ramo da loja' }),
 })
 
 export const checkoutSchema = z.object({

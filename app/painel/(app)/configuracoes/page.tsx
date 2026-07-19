@@ -3,6 +3,7 @@ import { getStoreForPanel } from '@/lib/data/stores'
 import { serializeSettings } from '@/lib/serialize'
 import { can } from '@/lib/plans'
 import { stripBrDdi } from '@/lib/utils'
+import { DEFAULT_SEGMENT } from '@/lib/segment'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 import { DeleteStoreZone } from '@/components/admin/DeleteStoreZone'
 
@@ -24,6 +25,7 @@ export default async function SettingsPage() {
         canCustomMessage={canCustomMessage}
         initial={{
           name: store?.name ?? '',
+          segment: store?.segment ?? DEFAULT_SEGMENT,
           logoUrl: store?.logoUrl ?? null,
           whatsappNumber: stripBrDdi(store?.whatsappNumber ?? ''),
           accentColor: store?.accentColor ?? null,
