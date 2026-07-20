@@ -14,9 +14,23 @@ import {
 import { getStoreForPanel, countProducts } from '@/lib/data/stores'
 import { canAddProduct, productLimit } from '@/lib/plans'
 import { getCatalogItem } from '@/lib/data/catalog'
+import { setProductOptionGroups } from '@/lib/data/option-groups'
 import { productSchema, fieldErrors } from '@/lib/validation'
 import { saveImage, hasUpload, deleteImage } from '@/lib/upload'
 import { emptyToNull, type ActionState } from '@/lib/action-state'
+
+/**
+ * Grupos de complementos marcados no formulário.
+ *
+ * Produto vendido por peso não aceita complementos: o priceDelta de um adicional
+ * é um valor fixo, mas o preço do item é multiplicado pelo peso — "bacon +R$ 4"
+ * num item de 0,5 kg viraria R$ 2. Em vez de inventar uma regra de escala, o
+ * servidor simplesmente ignora os grupos nesse caso (a UI também os esconde).
+ */
+function parseOptionGroupIds(formData: FormData, unit: string): string[] {
+  if (unit === 'KG') return []
+  return formData.getAll('optionGroupIds').map(String).filter(Boolean)
+}
 
 function parseProductForm(formData: FormData) {
   return {
@@ -65,7 +79,7 @@ export async function createProductAction(
     imageUrl = ci?.defaultImageUrl ?? null
   }
 
-  await createProduct(storeId, {
+  const created = await createProduct(storeId, {
     name: parsed.data.name,
     description: parsed.data.description ?? null,
     price: parsed.data.price,
@@ -75,6 +89,9 @@ export async function createProductAction(
     imageUrl,
     isAvailable: parsed.data.isAvailable ?? true,
   })
+
+  const groupIds = parseOptionGroupIds(formData, parsed.data.unit)
+  if (groupIds.length) await setProductOptionGroups(storeId, created.id, groupIds)
 
   revalidatePath('/painel/produtos')
   revalidatePath('/painel')
@@ -118,6 +135,10 @@ export async function updateProductAction(
     isAvailable: parsed.data.isAvailable ?? true,
   })
   if (!ok) return { error: 'Produto não encontrado.' }
+
+  // Sempre redefine (inclusive para lista vazia): desmarcar todos os grupos
+  // precisa desligar os complementos, não deixar os antigos pendurados.
+  await setProductOptionGroups(storeId, id, parseOptionGroupIds(formData, parsed.data.unit))
 
   // Remove o upload antigo trocado (só se for arquivo próprio da loja).
   if (oldImageUrl && oldImageUrl !== imageUrl) await deleteImage(oldImageUrl)

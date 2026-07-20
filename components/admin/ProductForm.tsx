@@ -34,15 +34,21 @@ export type ProductFormInitial = {
   catalogItemId?: string | null
   imageUrl?: string | null
   isAvailable?: boolean
+  optionGroupIds?: string[]
 }
+
+export type ProductFormGroup = { id: string; name: string; optionCount: number }
 
 export function ProductForm({
   mode,
   categories,
+  optionGroups = [],
   initial,
 }: {
   mode: 'create' | 'edit'
   categories: { id: string; name: string }[]
+  /** Grupos disponíveis. Vazio = a loja não usa complementos (mercadinho). */
+  optionGroups?: ProductFormGroup[]
   initial?: ProductFormInitial
 }) {
   const action = mode === 'create' ? createProductAction : updateProductAction
@@ -52,6 +58,7 @@ export function ProductForm({
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '')
   const [unit, setUnit] = useState<Unit>(initial?.unit ?? 'UN')
+  const [groupIds, setGroupIds] = useState<string[]>(initial?.optionGroupIds ?? [])
   const [catalogItemId, setCatalogItemId] = useState(initial?.catalogItemId ?? '')
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? '')
   const [filePreview, setFilePreview] = useState<string | null>(null)
@@ -237,6 +244,61 @@ export function ProductForm({
             </p>
           )}
         </div>
+
+        {/* Complementos — só aparece na lanchonete (a página decide se envia
+            os grupos). Item por peso não entra: adicional é valor fixo e o
+            preço do item escala com o peso, então "+R$ 4" num item de 0,5 kg
+            viraria R$ 2. */}
+        {optionGroups.length > 0 && (
+          <div>
+            <Label>Complementos</Label>
+            {unit === 'KG' ? (
+              <p className="rounded-xl bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
+                Itens vendidos por quilo não usam complementos — o valor do
+                adicional não faria sentido proporcional ao peso.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  {optionGroups.map((g) => {
+                    const checked = groupIds.includes(g.id)
+                    return (
+                      <label
+                        key={g.id}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 hover:bg-neutral-50"
+                      >
+                        <input
+                          type="checkbox"
+                          name="optionGroupIds"
+                          value={g.id}
+                          checked={checked}
+                          onChange={(e) =>
+                            setGroupIds((prev) =>
+                              e.target.checked
+                                ? [...prev, g.id]
+                                : prev.filter((id) => id !== g.id),
+                            )
+                          }
+                          className="h-4 w-4 shrink-0 accent-[var(--accent)]"
+                        />
+                        <span className="min-w-0 flex-1 text-sm text-neutral-800">
+                          {g.name}
+                          <span className="ml-2 text-xs text-neutral-400">
+                            {g.optionCount} {g.optionCount === 1 ? 'opção' : 'opções'}
+                          </span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+                <p className="mt-1 text-xs text-neutral-400">
+                  Marque os grupos que este item usa. Crie e edite grupos em
+                  “Complementos”.
+                </p>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Descrição */}
         <div>
