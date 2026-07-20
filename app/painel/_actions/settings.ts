@@ -47,6 +47,7 @@ export async function updateSettingsAction(
     fulfillment: String(formData.get('fulfillment') ?? 'DELIVERY_AND_PICKUP'),
     deliveryZones: parseZones(String(formData.get('deliveryZones') ?? '')),
     showOutOfStock: formData.get('showOutOfStock') === 'on',
+    receiptWidth: formData.get('receiptWidth') ?? 80,
     orderMessageTemplate: emptyToNull(formData.get('orderMessageTemplate')),
     openingHours: parseOpeningHours(formData),
   }
@@ -89,6 +90,7 @@ export async function updateSettingsAction(
     deliveryZones: parsed.data.deliveryZones,
     openingHours: parsed.data.openingHours ?? null,
     showOutOfStock: parsed.data.showOutOfStock ?? true,
+    receiptWidth: parsed.data.receiptWidth,
     orderMessageTemplate,
   })
 

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Truck, Package, MapPin, CreditCard, Phone, User } from 'lucide-react'
+import { ArrowLeft, Truck, Package, MapPin, CreditCard, Phone, User, Printer } from 'lucide-react'
 import { requireOnboardedStore } from '@/lib/auth-helpers'
 import { getOrder } from '@/lib/data/orders'
 import { getFiadoAccess, getFiadoEntryByOrder } from '@/lib/data/fiado'
@@ -41,6 +41,27 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <h1 className="font-display text-2xl font-bold text-neutral-900">Pedido</h1>
         <Badge tone="warning">Gerado</Badge>
         <span className="text-sm text-neutral-500">{formatDateTimeBR(order.createdAt)}</span>
+      </div>
+
+      {/* Impressão: abre a comanda numa aba limpa e já chama o diálogo.
+          Dois papéis diferentes — a cozinha não precisa (nem deve) ver preço. */}
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={`/painel/comanda/${order.id}?via=cozinha&print=1`}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-neutral-900 px-3 text-sm font-medium text-white hover:bg-neutral-800"
+        >
+          <Printer className="h-4 w-4" /> Imprimir p/ cozinha
+        </a>
+        <a
+          href={`/painel/comanda/${order.id}?via=cliente&print=1`}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        >
+          <Printer className="h-4 w-4" /> Imprimir p/ cliente
+        </a>
       </div>
 
       {/* Cliente / entrega */}

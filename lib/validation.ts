@@ -53,6 +53,8 @@ export const settingsSchema = z.object({
   fulfillment: fulfillmentEnum,
   deliveryZones: z.array(z.string().min(1)).default([]),
   showOutOfStock: z.boolean().optional(),
+  // Largura do papel da impressora térmica (mm). Só 58 e 80 existem no mercado.
+  receiptWidth: z.coerce.number().int().refine((n) => n === 58 || n === 80, 'Largura inválida'),
   orderMessageTemplate: z.string().max(2000).optional().nullable(),
   openingHours: z
     .record(

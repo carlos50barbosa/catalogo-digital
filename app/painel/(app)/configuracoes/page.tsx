@@ -37,6 +37,7 @@ export default async function SettingsPage() {
           deliveryZones: settings.deliveryZones,
           openingHours: settings.openingHours,
           showOutOfStock: settings.showOutOfStock,
+          receiptWidth: settings.receiptWidth,
           orderMessageTemplate: settings.orderMessageTemplate,
         }}
       />

@@ -32,6 +32,7 @@ export type SerializedSettings = {
   deliveryZones: string[]
   openingHours: OpeningHours | null
   showOutOfStock: boolean
+  receiptWidth: number
   orderMessageTemplate: string | null
 }
 

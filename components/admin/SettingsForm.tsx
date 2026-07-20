@@ -32,6 +32,7 @@ export type SettingsInitial = {
   deliveryZones: string[]
   openingHours: OpeningHours | null
   showOutOfStock: boolean
+  receiptWidth: number
   orderMessageTemplate: string | null
 }
 
@@ -340,6 +341,19 @@ export function SettingsForm({
             />
             Mostrar produtos esgotados (desmarque para ocultá-los)
           </label>
+
+          <div>
+            <Label htmlFor="receiptWidth">Papel da impressora</Label>
+            <Select id="receiptWidth" name="receiptWidth" defaultValue={String(initial.receiptWidth)}>
+              <option value="80">80 mm (o mais comum)</option>
+              <option value="58">58 mm (impressora pequena)</option>
+            </Select>
+            <p className="mt-1 text-xs text-neutral-400">
+              Largura da bobina da sua impressora térmica. Na medida errada a
+              comanda sai quebrada.
+            </p>
+            <FieldError message={state.fieldErrors?.receiptWidth} />
+          </div>
           {canCustomMessage ? (
             <div>
               <Label htmlFor="orderMessageTemplate">Mensagem do pedido (opcional)</Label>

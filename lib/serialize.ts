@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS: SerializedSettings = {
   deliveryZones: [],
   openingHours: null,
   showOutOfStock: true,
+  receiptWidth: 80,
   orderMessageTemplate: null,
 }
 
@@ -58,6 +59,7 @@ export function serializeSettings(s: StoreSettings | null): SerializedSettings {
       : [],
     openingHours: (s.openingHours as OpeningHours | null) ?? null,
     showOutOfStock: s.showOutOfStock,
+    receiptWidth: s.receiptWidth,
     orderMessageTemplate: s.orderMessageTemplate,
   }
 }

@@ -79,6 +79,7 @@ export async function upsertStoreSettings(
     deliveryZones: string[]
     openingHours: Record<string, { open: string; close: string } | null> | null
     showOutOfStock: boolean
+    receiptWidth: number
     orderMessageTemplate: string | null
   },
 ) {
@@ -91,6 +92,7 @@ export async function upsertStoreSettings(
     deliveryZones: (data.deliveryZones ?? []) as unknown as Prisma.InputJsonValue,
     openingHours: (data.openingHours ?? undefined) as unknown as Prisma.InputJsonValue | undefined,
     showOutOfStock: data.showOutOfStock,
+    receiptWidth: data.receiptWidth,
     orderMessageTemplate: data.orderMessageTemplate,
   }
   await prisma.storeSettings.upsert({

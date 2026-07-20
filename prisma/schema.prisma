@@ -151,6 +151,10 @@ model StoreSettings {
   fulfillment          Fulfillment @default(DELIVERY_AND_PICKUP)
   orderMessageTemplate String?     @db.Text
   showOutOfStock       Boolean     @default(true) // mostrar produtos esgotados (true) ou ocultar (false)
+  // Largura do papel da impressora térmica, em mm (80 = 48 colunas, 58 = 32).
+  // É propriedade física do equipamento de cada loja: a comanda quebra feio na
+  // largura errada.
+  receiptWidth         Int         @default(80)
 
   // ----- Fiado (caderneta digital) -----
   fiadoEnabled            Boolean @default(true) // liga/desliga o fiado nesta loja (além do gating por plano)
