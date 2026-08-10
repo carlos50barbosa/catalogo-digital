@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { AlertCircle, Store, ShoppingCart, Sandwich } from 'lucide-react'
+import type { Plan } from '@prisma/client'
 import { signupAction } from '@/app/cadastro/actions'
 import { initialActionState } from '@/lib/action-state'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,8 @@ import { SEGMENT_LIST, DEFAULT_SEGMENT } from '@/lib/segment'
 
 const SEGMENT_ICONS = { MERCADO: ShoppingCart, LANCHONETE: Sandwich } as const
 
-export function CadastroForm() {
+/** `plan` é o plano vindo da vitrine de preços (/cadastro?plano=X), quando houver. */
+export function CadastroForm({ plan }: { plan?: Plan | null }) {
   const [state, formAction, pending] = useActionState(signupAction, initialActionState)
   const [storeName, setStoreName] = useState('')
   const [slug, setSlug] = useState('')
@@ -23,6 +25,8 @@ export function CadastroForm() {
 
   return (
     <form action={formAction} className="space-y-4">
+      {plan && <input type="hidden" name="plan" value={plan} />}
+
       {state.error && (
         <p className="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
           <AlertCircle className="h-4 w-4 shrink-0" /> {state.error}

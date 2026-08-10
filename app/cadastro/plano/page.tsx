@@ -3,13 +3,19 @@ import { Clock } from 'lucide-react'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { config } from '@/lib/config'
+import { parsePlan, POPULAR_PLAN } from '@/lib/plans'
+import { readPlanIntent } from '@/lib/plan-intent'
 import { PlanoForm } from '@/components/signup/PlanoForm'
 import { StartTrialButton } from '@/components/signup/StartTrialButton'
 import { LogoutButton } from '@/components/admin/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PlanoPage() {
+export default async function PlanoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plano?: string }>
+}) {
   const session = await auth()
   if (!session?.user?.storeId || !session.user.email) redirect('/painel/login')
 
@@ -20,6 +26,10 @@ export default async function PlanoPage() {
       select: { status: true, trialEndsAt: true, subscription: { select: { id: true } } },
     }),
   ])
+
+  // Plano que a pessoa escolheu antes de chegar aqui: link direto (?plano=X)
+  // ganha do cookie guardado no cadastro; sem nenhum dos dois, cai no popular.
+  const intended = parsePlan((await searchParams).plano) ?? (await readPlanIntent()) ?? POPULAR_PLAN
 
   if (!user?.emailVerified) redirect('/cadastro/verificar-email')
   if (store?.status === 'ACTIVE') redirect('/painel')
@@ -98,7 +108,7 @@ export default async function PlanoPage() {
         )}
 
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
-          <PlanoForm />
+          <PlanoForm initialPlan={intended} />
         </div>
       </div>
     </main>

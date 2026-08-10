@@ -68,8 +68,37 @@ export const PLANS: Record<Plan, PlanFeatures> = {
 
 export const ORDERED_PLANS: Plan[] = ['ESSENCIAL', 'PROFISSIONAL', 'PREMIUM']
 
+/** Plano destacado como "Popular" nas vitrines de preço. */
+export const POPULAR_PLAN: Plan = 'PROFISSIONAL'
+
 export function planFeatures(plan: Plan): PlanFeatures {
   return PLANS[plan]
+}
+
+/** Converte um valor externo (query string, cookie, formulário) em Plan válido. */
+export function parsePlan(value: unknown): Plan | null {
+  const v = String(value ?? '').toUpperCase()
+  return (ORDERED_PLANS as string[]).includes(v) ? (v as Plan) : null
+}
+
+/**
+ * Destaques do plano em texto puro — usado na vitrine de preços da home e na
+ * tela de escolha do plano, para as duas nunca prometerem coisas diferentes.
+ */
+export function planHighlights(plan: Plan): string[] {
+  const f = PLANS[plan]
+  const out = [f.maxProducts === null ? 'Produtos ilimitados' : `Até ${f.maxProducts} produtos`]
+  if (f.fiadoEnabled) {
+    out.push(
+      f.fiadoMaxCustomers === null
+        ? 'Caderneta de fiado ilimitada'
+        : `Caderneta de fiado (até ${f.fiadoMaxCustomers} clientes)`,
+    )
+  }
+  if (f.ofertasEnabled) out.push('Seção de ofertas')
+  if (f.prioritySupport) out.push('Suporte prioritário')
+  if (f.managedContent) out.push('Conteúdo feito pra você')
+  return out
 }
 
 export function productLimit(plan: Plan): number | null {

@@ -7,8 +7,13 @@ import {
   Users,
   QrCode,
   Sparkles,
+  Check,
+  Star,
 } from 'lucide-react'
 import { config } from '@/lib/config'
+import { ORDERED_PLANS, POPULAR_PLAN, planFeatures, planHighlights } from '@/lib/plans'
+import { formatBRL } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 // Página raiz / landing pública. Apresenta as principais funcionalidades do SaaS.
 export const metadata = {
@@ -98,7 +103,11 @@ export default function HomePage() {
           </div>
           {trialDays > 0 && (
             <p className="mt-3 text-xs text-neutral-500">
-              Teste tudo por {trialDays} dias. Só peça um plano quando decidir continuar.
+              Teste tudo por {trialDays} dias. Só peça um plano quando decidir continuar —{' '}
+              <a href="#planos" className="font-medium text-green-700 underline">
+                veja os preços
+              </a>
+              .
             </p>
           )}
         </div>
@@ -126,6 +135,71 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Planos — preço à vista antes do cadastro, e cada card já leva o plano escolhido junto. */}
+        <section id="planos" className="mt-16 w-full scroll-mt-8">
+          <h2 className="text-center font-display text-xl font-bold text-neutral-900">
+            Planos e preços
+          </h2>
+          <p className="mx-auto mt-1 max-w-lg text-center text-sm text-neutral-500">
+            Mensalidade fixa, sem comissão por venda. Cancele quando quiser.
+          </p>
+
+          <div className="mt-8 grid w-full gap-4 md:grid-cols-3">
+            {ORDERED_PLANS.map((p) => {
+              const f = planFeatures(p)
+              const popular = p === POPULAR_PLAN
+              return (
+                <div
+                  key={p}
+                  className={cn(
+                    'relative flex flex-col rounded-2xl border bg-white p-6 text-left shadow-card',
+                    popular ? 'border-green-600 ring-1 ring-green-600' : 'border-neutral-200',
+                  )}
+                >
+                  {popular && (
+                    <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                      <Star className="h-3 w-3" /> Popular
+                    </span>
+                  )}
+                  <h3 className="font-display text-lg font-extrabold text-neutral-900">{f.label}</h3>
+                  <p className="mt-1 font-display text-2xl font-bold text-green-700">
+                    {formatBRL(f.value)}
+                    <span className="text-sm font-normal text-neutral-400">/mês</span>
+                  </p>
+                  <p className="mt-1 text-sm text-neutral-500">{f.resumo}</p>
+
+                  <ul className="mt-4 flex-1 space-y-2">
+                    {planHighlights(p).map((item) => (
+                      <li key={item} className="flex items-start gap-2 text-sm text-neutral-700">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" /> {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link
+                    href={`/cadastro?plano=${p}`}
+                    className={cn(
+                      'mt-6 inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium',
+                      popular
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50',
+                    )}
+                  >
+                    {trialDays > 0 ? 'Começar teste grátis' : `Escolher ${f.label}`}
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+
+          {trialDays > 0 && (
+            <p className="mt-4 text-center text-xs text-neutral-500">
+              Todos começam com {trialDays} dias grátis, sem cartão. A cobrança só existe se você
+              decidir continuar.
+            </p>
+          )}
         </section>
 
         <p className="mt-10 text-xs text-neutral-400">

@@ -12,6 +12,7 @@ import {
   regenerateVerifyToken,
 } from '@/lib/data/signup'
 import { sendVerificationEmail } from '@/lib/email'
+import { rememberPlanIntent } from '@/lib/plan-intent'
 import { rateLimit } from '@/lib/rate-limit'
 import { config } from '@/lib/config'
 import { slugify, normalizeBrWhatsapp } from '@/lib/utils'
@@ -61,6 +62,10 @@ export async function signupAction(_prev: ActionState, formData: FormData): Prom
     slug,
     segment: parsed.data.segment,
   })
+
+  // Guarda o plano escolhido na home para pré-selecionar em /cadastro/plano —
+  // a verificação de e-mail fica no meio do caminho e apagaria a escolha.
+  await rememberPlanIntent(formData.get('plan'))
 
   // E-mail de verificação (em dev sem SMTP, o link é logado no console).
   try {

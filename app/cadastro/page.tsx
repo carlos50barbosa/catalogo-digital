@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ShieldCheck, Wrench, MessageCircle } from 'lucide-react'
 import { CadastroForm } from '@/components/signup/CadastroForm'
+import { parsePlan, planFeatures } from '@/lib/plans'
 
 export const metadata: Metadata = {
   title: 'Criar minha loja — Catálogo Digital',
@@ -15,7 +16,15 @@ const SELOS = [
   { icon: Wrench, label: 'Fácil de configurar' },
 ]
 
-export default function CadastroPage() {
+export default async function CadastroPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plano?: string }>
+}) {
+  // Plano escolhido na vitrine de preços da home (só uma intenção — o plano
+  // cobrado é o confirmado depois, em /cadastro/plano).
+  const plan = parsePlan((await searchParams).plano)
+
   return (
     <main className="min-h-screen bg-neutral-50 px-4 py-10">
       <div className="mx-auto max-w-xl">
@@ -32,10 +41,16 @@ export default function CadastroPage() {
           <p className="mt-1 text-neutral-500">
             Em poucos minutos sua loja vende pelo WhatsApp.
           </p>
+          {plan && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm text-green-800">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              Plano <strong>{planFeatures(plan).label}</strong> guardado para depois do cadastro
+            </p>
+          )}
         </div>
 
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
-          <CadastroForm />
+          <CadastroForm plan={plan} />
         </div>
 
         <ul className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2">

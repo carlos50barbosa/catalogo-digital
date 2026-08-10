@@ -10,6 +10,7 @@ import { gateway } from '@/lib/billing'
 import { setStoreStatus } from '@/lib/data/billing'
 import { deriveIsActive } from '@/lib/store-status'
 import { fieldErrors } from '@/lib/validation'
+import { clearPlanIntent } from '@/lib/plan-intent'
 import { rateLimit } from '@/lib/rate-limit'
 import { config } from '@/lib/config'
 import type { ActionState } from '@/lib/action-state'
@@ -61,6 +62,7 @@ export async function startTrialAction(): Promise<void> {
       },
     })
   }
+  await clearPlanIntent() // a escolha da home já cumpriu o papel
   redirect('/painel') // entra no onboarding (painel travado até publicar)
 }
 
@@ -105,6 +107,8 @@ export async function choosePlanAction(_prev: ActionState, formData: FormData): 
   // TRIAL: loja entra em período de teste (pública só após publicar no onboarding).
   // PAY_TO_ACTIVATE: segue PENDING até o webhook confirmar o pagamento.
   if (config.signup.mode === 'TRIAL') await setStoreStatus(storeId, 'TRIALING')
+
+  await clearPlanIntent() // plano confirmado: a intenção da home não serve mais
 
   if (res.checkoutUrl) redirect(res.checkoutUrl) // página de pagamento hospedada do Asaas
   redirect('/cadastro/aguardando')

@@ -2,9 +2,10 @@
 
 import { useActionState, useState } from 'react'
 import { Check, Star, AlertCircle, CreditCard } from 'lucide-react'
+import type { Plan } from '@prisma/client'
 import { choosePlanAction } from '@/app/cadastro/plano/actions'
 import { initialActionState } from '@/lib/action-state'
-import { PLANS, ORDERED_PLANS, planFeatures } from '@/lib/plans'
+import { ORDERED_PLANS, POPULAR_PLAN, planFeatures, planHighlights } from '@/lib/plans'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label, FieldError } from '@/components/ui/label'
@@ -17,9 +18,10 @@ const BILLING = [
   { value: 'CREDIT_CARD', label: 'Cartão' },
 ] as const
 
-export function PlanoForm() {
+/** `initialPlan` vem da escolha feita na vitrine de preços, antes do cadastro. */
+export function PlanoForm({ initialPlan = POPULAR_PLAN }: { initialPlan?: Plan }) {
   const [state, formAction, pending] = useActionState(choosePlanAction, initialActionState)
-  const [plan, setPlan] = useState<string>('PROFISSIONAL')
+  const [plan, setPlan] = useState<string>(initialPlan)
   const [billing, setBilling] = useState<string>('PIX')
 
   return (
@@ -51,7 +53,7 @@ export function PlanoForm() {
                 onChange={() => setPlan(p)}
                 className="sr-only"
               />
-              {f.customBranding === 'full' && p === 'PROFISSIONAL' && (
+              {p === POPULAR_PLAN && (
                 <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-accent-fg">
                   <Star className="h-3 w-3" /> Popular
                 </span>
@@ -63,33 +65,11 @@ export function PlanoForm() {
               </p>
               <p className="mt-1 text-xs text-neutral-500">{f.resumo}</p>
               <ul className="mt-3 space-y-1.5">
-                <li className="flex items-center gap-1.5 text-xs text-neutral-700">
-                  <Check className="h-3.5 w-3.5 text-green-600" />
-                  {f.maxProducts === null ? 'Produtos ilimitados' : `Até ${f.maxProducts} produtos`}
-                </li>
-                {f.fiadoEnabled && (
-                  <li className="flex items-center gap-1.5 text-xs text-neutral-700">
-                    <Check className="h-3.5 w-3.5 text-green-600" />
-                    {f.fiadoMaxCustomers === null
-                      ? 'Caderneta de fiado ilimitada'
-                      : `Caderneta de fiado (até ${f.fiadoMaxCustomers} clientes)`}
+                {planHighlights(p).map((item) => (
+                  <li key={item} className="flex items-start gap-1.5 text-xs text-neutral-700">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" /> {item}
                   </li>
-                )}
-                {f.ofertasEnabled && (
-                  <li className="flex items-center gap-1.5 text-xs text-neutral-700">
-                    <Check className="h-3.5 w-3.5 text-green-600" /> Seção de ofertas
-                  </li>
-                )}
-                {f.prioritySupport && (
-                  <li className="flex items-center gap-1.5 text-xs text-neutral-700">
-                    <Check className="h-3.5 w-3.5 text-green-600" /> Suporte prioritário
-                  </li>
-                )}
-                {f.managedContent && (
-                  <li className="flex items-center gap-1.5 text-xs text-neutral-700">
-                    <Check className="h-3.5 w-3.5 text-green-600" /> Conteúdo feito pra você
-                  </li>
-                )}
+                ))}
               </ul>
             </label>
           )
